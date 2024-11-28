@@ -10,22 +10,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PaymentHistory {
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private Integer method;
-
-  @NotNull
   private Integer amount;
-
-  @NotNull
   private Integer status;
-
-  @NotNull
   private Date transactionDate;
-
-  @NotNull
   private Integer paymentId;
 
   // 정적 팩토리 메소드

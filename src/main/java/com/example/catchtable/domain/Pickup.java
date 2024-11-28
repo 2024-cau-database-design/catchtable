@@ -15,28 +15,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Pickup {
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private Integer pickupTimeId;
-
-  @NotNull
   private LocalDate pickupDate;
-
-  // @NotNull
   private Integer pickedAt;
-
-  @NotNull
   private LocalDateTime createdAt;
-
-  @NotNull
   private LocalDateTime updatedAt;
-
-  @NotNull
   private Boolean isDeleted;
-
-
   private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드

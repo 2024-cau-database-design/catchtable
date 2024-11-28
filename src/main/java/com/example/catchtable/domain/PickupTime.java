@@ -11,13 +11,8 @@ import java.sql.Time;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PickupTime {
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private Integer restaurantId;
-
-  @NotNull
   private Time time;
 
   // 정적 팩토리 메소드

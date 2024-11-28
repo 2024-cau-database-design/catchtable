@@ -4,19 +4,17 @@ import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Booking {
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private String type;
 
   // 정적 팩토리 메소드
-  public static Booking create(String type) {
+  public static Booking fromEntity(String type) {
     Booking booking = new Booking();
     booking.type = type;
     return booking;

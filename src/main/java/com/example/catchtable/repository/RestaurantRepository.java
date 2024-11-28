@@ -1,6 +1,8 @@
 package com.example.catchtable.repository;
 
 import com.example.catchtable.domain.Restaurant;
+import com.example.catchtable.domain.RestaurantInfo;
+import java.util.ArrayList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -27,7 +29,7 @@ public class RestaurantRepository {
 
   private final RowMapper<Restaurant> restaurantRowMapper = (rs, rowNum) ->
       Restaurant.fromEntity(
-          rs.getLong("id"),
+          rs.getInt("id"),
           rs.getString("name"),
           rs.getTimestamp("created_at"),
           rs.getTimestamp("updated_at"),
@@ -41,7 +43,7 @@ public class RestaurantRepository {
     return jdbcTemplate.query(sql, restaurantRowMapper, name);
   }
 
-  public Restaurant save(Restaurant entity) {
+  public Optional<Restaurant> save(Restaurant entity) {
     if (entity.getId() == null) {
       return insert(entity);
     } else {
@@ -49,7 +51,7 @@ public class RestaurantRepository {
     }
   }
 
-  private Restaurant insert(Restaurant entity) {
+  private Optional<Restaurant> insert(Restaurant entity) {
     String sql = "INSERT INTO restaurant (name, created_at, updated_at, is_deleted) VALUES (?, ?, ?, ?)";
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
@@ -57,33 +59,34 @@ public class RestaurantRepository {
       ps.setString(1, entity.getName());
       ps.setTimestamp(2, Timestamp.valueOf(entity.getCreatedAt()));
       ps.setTimestamp(3, Timestamp.valueOf(entity.getUpdatedAt()));
-      ps.setBoolean(4, entity.isDeleted());
+      ps.setBoolean(4, entity.getIsDeleted());
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    entity.setId(Objects.requireNonNull(key).longValue());
-    return entity;
+    return findById(Objects.requireNonNull(key).intValue()); // Return the created entity
   }
 
-  private Restaurant update(Restaurant entity) {
+  private Optional<Restaurant> update(Restaurant entity) {
     String sql = "UPDATE restaurant SET name = ?, updated_at = ? WHERE id = ?";
     jdbcTemplate.update(sql, entity.getName(), Timestamp.valueOf(entity.getUpdatedAt()), entity.getId());
-    return entity; // Or return findById(entity.getId()).orElseThrow(); to get the updated entity from DB
+    return findById(entity.getId()); // Return the updated entity
   }
 
   public Iterable<Restaurant> saveAll(Iterable<Restaurant> entities) {
-    throw new UnsupportedOperationException("Not implemented yet.");
+    entities.iterator().forEachRemaining(this::save);
+    return findAll(entities); // 존재하는 객체들만 반환
   }
 
-  public Optional<Restaurant> findById(Long id) {
+  public Optional<Restaurant> findById(Integer id) {
     String sql = "SELECT * FROM restaurant WHERE id = ?";
     List<Restaurant> result = jdbcTemplate.query(sql, restaurantRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Long id) {
+  public boolean existsById(Integer id) {
     String sql = "SELECT count(*) FROM restaurant WHERE id = ?";
-    return jdbcTemplate.queryForObject(sql, Integer.class, id) > 0;
+    var result = jdbcTemplate.queryForObject(sql, Long.class, id);
+    return Optional.ofNullable(result).orElse(0L) > 0; // count가 0보다 크면 존재하는 것으로 간주
   }
 
   public Iterable<Restaurant> findAll() {
@@ -91,16 +94,23 @@ public class RestaurantRepository {
     return jdbcTemplate.query(sql, restaurantRowMapper);
   }
 
-  public Iterable<Restaurant> findAllById(Iterable<Long> longs) {
-    throw new UnsupportedOperationException("Not implemented yet.");
+  public Iterable<Restaurant> findAll(Iterable<Restaurant> entities) {
+    List<Restaurant> resultList = new ArrayList<>();
+    for (Restaurant entity : entities) {
+      if (existsById(entity.getId())) {
+        resultList.add(entity);
+      }
+    }
+    return resultList;
   }
 
   public long count() {
     String sql = "SELECT count(*) FROM restaurant";
-    return jdbcTemplate.queryForObject(sql, Long.class);
+    var result = jdbcTemplate.queryForObject(sql, Long.class);
+    return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Long id) {
+  public void deleteById(Integer id) {
     String sql = "DELETE FROM restaurant WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }
@@ -109,12 +119,8 @@ public class RestaurantRepository {
     deleteById(entity.getId());
   }
 
-  public void deleteAllById(Iterable<? extends Long> longs) {
-    throw new UnsupportedOperationException("Not implemented yet.");
-  }
-
-  public void deleteAll(Iterable<? extends Restaurant> entities) {
-    throw new UnsupportedOperationException("Not implemented yet.");
+  public void deleteAll(Iterable<Restaurant> entities) {
+    entities.iterator().forEachRemaining(this::delete);
   }
 
   public void deleteAll() {

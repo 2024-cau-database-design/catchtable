@@ -10,10 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Role {
 
-  @NotNull
   private Integer id;
-
-  @NotBlank
   private String roleName;
 
   // 정적 팩토리 메소드

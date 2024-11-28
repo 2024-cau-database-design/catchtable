@@ -13,19 +13,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Waiting { // Waiting 오타 수정
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private LocalDateTime createdAt;
-
-  @NotNull
   private Integer customerId;
-
-  @NotNull
   private Integer guestCount;
-
-  @NotNull
   private Integer restaurantId;
 
   // 정적 팩토리 메소드

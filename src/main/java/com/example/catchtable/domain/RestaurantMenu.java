@@ -15,28 +15,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RestaurantMenu {
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private Integer restaurantId;
-
-  @NotBlank
   private String menuName;
-
-
   private String menuDescription;
-
-  @NotNull
   private Integer menuPrice;
-
-
   // private String menuPhotoPath;
-
-  @NotNull
   private LocalDateTime createdAt;
-
-  @NotNull
   private LocalDateTime updatedAt;
 
   // 정적 팩토리 메소드

@@ -15,23 +15,12 @@ import lombok.Setter;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Restaurant {
-  @Setter // 더 좋은 방법 없을까?
-  @NotNull
+
   private Integer id;
-
-  @NotNull
   private String name;
-
-  @NotNull
   private LocalDateTime createdAt;
-
-  @NotNull
   private LocalDateTime updatedAt;
-
-  @NotNull
   private Boolean isDeleted;
-
-  @Null
   private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드

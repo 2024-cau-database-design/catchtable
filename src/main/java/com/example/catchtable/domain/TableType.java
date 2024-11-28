@@ -10,14 +10,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TableType {
 
-  @NotNull
   private Integer id;
-
-  @NotBlank
   private String typeName;
 
   // 정적 팩토리 메소드
-  public static TableType create(String typeName) {
+  public static TableType fromEntity(String typeName) {
     TableType tableType = new TableType();
     tableType.typeName = typeName;
     return tableType;
