@@ -17,8 +17,10 @@ public class OrderItem {
 
 
   // 정적 팩토리 메소드
-  public static OrderItem create(Integer orderId, Integer menuId, Integer quantity, Integer price) {
+  public static OrderItem fromEntity(Integer id, Integer orderId, Integer menuId,
+      Integer quantity, Integer price) {
     OrderItem orderItem = new OrderItem();
+    orderItem.id = id;
     orderItem.orderId = orderId;
     orderItem.menuId = menuId;
     orderItem.quantity = quantity;

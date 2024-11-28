@@ -14,8 +14,9 @@ public class OrderStatus {
   private String type;
 
   // 정적 팩토리 메소드
-  public static OrderStatus create(String type) {
+  public static OrderStatus fromEntity(Integer id, String type) {
     OrderStatus orderStatus = new OrderStatus();
+    orderStatus.id = id;
     orderStatus.type = type;
     return orderStatus;
   }

@@ -16,8 +16,9 @@ public class ReservationTime {
   private Time time;
 
   // 정적 팩토리 메소드
-  public static ReservationTime create(Time time, Integer restaurantId) {
+  public static ReservationTime fromEntity(Integer id, Time time, Integer restaurantId) {
     ReservationTime reservationTime = new ReservationTime();
+    reservationTime.id = id;
     reservationTime.time = time;
     reservationTime.restaurantId = restaurantId;
     return reservationTime;

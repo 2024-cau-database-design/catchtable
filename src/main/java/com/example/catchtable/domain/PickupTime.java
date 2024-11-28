@@ -16,8 +16,9 @@ public class PickupTime {
   private Time time;
 
   // 정적 팩토리 메소드
-  public static PickupTime create(Time time, Integer restaurantId) {
+  public static PickupTime fromEntity(Integer id, Time time, Integer restaurantId) {
     PickupTime pickupTime = new PickupTime();
+    pickupTime.id = id;
     pickupTime.time = time;
     pickupTime.restaurantId = restaurantId;
     return pickupTime;

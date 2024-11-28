@@ -28,10 +28,11 @@ public class Reservation {
 
 
   // 정적 팩토리 메소드
-  public static Reservation create(Integer reservationTimeId, LocalDate bookingDate,
+  public static Reservation fromEntity(Integer id, Integer reservationTimeId, LocalDate bookingDate,
       Byte guestsCount, Integer restaurantTableId,
       Timestamp createdAt, Timestamp updatedAt, Boolean isDeleted, Timestamp deletedAt) {
     Reservation reservation = new Reservation();
+    reservation.id = id;
     reservation.reservationTimeId = reservationTimeId;
     reservation.bookingDate = bookingDate;
     reservation.guestsCount = guestsCount;

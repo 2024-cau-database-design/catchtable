@@ -25,9 +25,11 @@ public class RestaurantMenu {
   private LocalDateTime updatedAt;
 
   // 정적 팩토리 메소드
-  public static RestaurantMenu create(Integer restaurantId, String menuName, String menuDescription, Integer menuPrice,
+  public static RestaurantMenu fromEntity(Integer id, Integer restaurantId,
+      String menuName, String menuDescription, Integer menuPrice,
       Timestamp createdAt, Timestamp updatedAt) {
     RestaurantMenu restaurantMenu = new RestaurantMenu();
+    restaurantMenu.id = id;
     restaurantMenu.restaurantId = restaurantId;
     restaurantMenu.menuName = menuName;
     restaurantMenu.menuDescription = menuDescription;

@@ -24,9 +24,10 @@ public class RestaurantTable {
   private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드
-  public static RestaurantTable create(Integer restaurantId, Integer tableType, Integer seatCapacity,
+  public static RestaurantTable fromEntity(Integer id, Integer restaurantId, Integer tableType, Integer seatCapacity,
       Timestamp createdAt, Timestamp updatedAt, Boolean isDeleted, Timestamp deletedAt) {
     RestaurantTable restaurantTable = new RestaurantTable();
+    restaurantTable.id = id;
     restaurantTable.restaurantId = restaurantId;
     restaurantTable.tableType = tableType;
     restaurantTable.seatCapacity = seatCapacity;
