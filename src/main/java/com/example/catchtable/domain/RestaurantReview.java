@@ -15,31 +15,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RestaurantReview {
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private Integer restaurantId;
-
-  @NotNull
   private Integer customerId;
-
-  @NotNull
   private Integer reviewRating;
-
-
   private String reviewCaption;
-
-  @NotNull
   private LocalDateTime createdAt;
-
-  @NotNull
   private LocalDateTime updatedAt;
-
-  @NotNull
   private Boolean isDeleted;
-
-
   private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드

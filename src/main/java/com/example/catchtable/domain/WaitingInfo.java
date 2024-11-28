@@ -9,16 +9,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class WaitingInfo {
 
-  @NotNull
   private Integer waitingId;
-
-  @NotNull
   private Integer partySize;
-
-  @NotNull
   private Integer restaurantId;
-
-  @NotNull
   private Integer customerId;
 
   // 정적 팩토리 메소드

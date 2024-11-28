@@ -15,31 +15,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RestaurantInfo {
 
-  @NotNull
   private Integer restaurantId;
-
-  @NotBlank
   private String phoneNumber;
-
-  @NotBlank
   private String fullAddress;
-
-
   private String websiteUrl;
-
-
   private String description;
-
-  @NotNull
   private LocalDateTime createdAt;
-
-  @NotNull
   private LocalDateTime updatedAt;
-
-  @NotNull
   private Boolean isDeleted;
-
-
   private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드

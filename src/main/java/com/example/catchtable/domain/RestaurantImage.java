@@ -14,28 +14,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RestaurantImage {
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private Integer restaurantId;
-
-  @NotNull
   private String name;
-
-  @NotNull
   private String url;
-
-
   private String description;
-
-  @NotNull
   private LocalDateTime createdAt;
-
-  @NotNull
   private Boolean isDeleted;
-
-
   private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드

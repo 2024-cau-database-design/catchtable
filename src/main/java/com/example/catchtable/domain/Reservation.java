@@ -15,31 +15,14 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Reservation {
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private Integer reservationTimeId;
-
-  @NotNull
   private LocalDate bookingDate;
-
-  @NotNull
   private Byte guestsCount;
-
-  @NotNull
   private Integer restaurantTableId;
-
-  @NotNull
   private LocalDateTime createdAt;
-
-  @NotNull
   private LocalDateTime updatedAt;
-
-  @NotNull
   private Boolean isDeleted;
-
-
   private LocalDateTime deletedAt;
 
 

@@ -9,19 +9,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OrderItem {
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private Integer orderId;
-
-  @NotNull
   private Integer menuId;
-
-  @NotNull
   private Integer quantity;
-
-  @NotNull
   private Integer price;
 
 

@@ -14,28 +14,13 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RestaurantTable {
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private Integer restaurantId;
-
-  @NotNull
   private Integer tableType;
-
-  @NotNull
   private Integer seatCapacity;
-
-  @NotNull
   private LocalDateTime createdAt;
-
-  @NotNull
   private LocalDateTime updatedAt;
-
-  @NotNull
   private Boolean isDeleted;
-
-
   private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드

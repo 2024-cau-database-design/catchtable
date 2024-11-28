@@ -13,16 +13,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class WaitingHistory {
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private Integer waitingId;
-
-  @NotNull
   private LocalDateTime createdAt;
-
-  @NotNull
   private Integer waitingStatusId;
 
   // 정적 팩토리 메소드

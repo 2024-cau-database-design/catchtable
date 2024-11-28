@@ -14,22 +14,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReservationHistory {
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private Integer statusId;
-
-
   private LocalDateTime visitedAt;
-
-  @NotNull
   private Integer reservationId;
-
-  @NotNull
   private LocalDate bookingTime;
-
-  @NotNull
   private Integer guestsCount;
 
   // 정적 팩토리 메소드

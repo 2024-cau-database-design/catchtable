@@ -16,29 +16,13 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserAuth {
 
-  @Setter
-  @NotNull
   private Integer id;
-
-  @NotBlank
   private String passwordHash;
-
-  @NotBlank
   private String ident;
-
-  @NotBlank
   private String email;
-
-  @NotNull
   private LocalDateTime createdAt;
-
-  @NotNull
   private LocalDateTime updatedAt;
-
-  @NotNull
   private Boolean isDeleted;
-
-
   private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드

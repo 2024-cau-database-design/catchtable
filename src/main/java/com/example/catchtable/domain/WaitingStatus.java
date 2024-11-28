@@ -10,10 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class WaitingStatus {
 
-  @NotNull
   private Integer id;
-
-  @NotBlank
   private String type;
 
   // 정적 팩토리 메소드

@@ -9,27 +9,17 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import lombok.Setter;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Customer {
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private String name;
-
-  @NotNull
   private String phoneNumber;
-
-  @NotNull
   private LocalDateTime createdAt;
-
-  @NotNull
   private Boolean isDeleted;
-
-
   private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드

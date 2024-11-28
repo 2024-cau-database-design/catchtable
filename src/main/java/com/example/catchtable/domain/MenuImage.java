@@ -14,22 +14,11 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MenuImage {
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private String name;
-
-  @NotNull
   private String url;
-
-  @NotNull
   private Integer menuId; // FK 확인 필요: review_id? menu_id?
-
-  @NotNull
   private LocalDateTime createdAt;
-
-  @NotNull
   private Boolean isDeleted;
 
 

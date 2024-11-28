@@ -15,25 +15,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReviewImage {
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private Integer reviewId;
-
-
   // private String name;
-
-  @NotBlank
   private String url;
-
-  @NotNull
   private LocalDateTime createdAt;
-
-  @NotNull
   private Boolean isDeleted;
-
-
   private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드

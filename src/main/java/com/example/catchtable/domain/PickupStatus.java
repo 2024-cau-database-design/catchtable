@@ -9,10 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PickupStatus {
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private String type;
 
   // 정적 팩토리 메소드

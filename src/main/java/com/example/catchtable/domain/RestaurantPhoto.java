@@ -23,26 +23,12 @@ public class RestaurantPhoto {
 
 
   // private String photoName;
-
-  @NotBlank
   private String photoPath;
-
-  @NotBlank
   private String photoType;
-
-  @NotNull
   private Integer photoSize;
-
-
   private String description;
-
-  @NotNull
   private LocalDateTime createdAt;
-
-  @NotNull
   private Boolean isDeleted;
-
-
   private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드

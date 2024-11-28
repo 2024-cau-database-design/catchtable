@@ -15,25 +15,12 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Payment {
 
-  @NotNull
   private Integer id;
-
-  @NotNull
   private Integer amount;
-
-  @NotNull
   private Integer orderId;
-
-  @NotBlank
   private String method;
-
-  @NotNull
   private LocalDateTime createdAt;
-
-  @NotNull
   private LocalDateTime updatedAt;
-
-  @NotNull
   private Boolean isDeleted;
 
 
