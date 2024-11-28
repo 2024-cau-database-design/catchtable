@@ -32,7 +32,7 @@ public class RestaurantPhoto {
   private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드
-  public static RestaurantPhoto create(Integer restaurantId, String photoPath,
+  public static RestaurantPhoto fromEntity(Integer restaurantId, String photoPath,
       String photoType, Integer photoSize, String description,
       Timestamp createdAt, Boolean isDeleted, Timestamp deletedAt) {
     RestaurantPhoto restaurantPhoto = new RestaurantPhoto();

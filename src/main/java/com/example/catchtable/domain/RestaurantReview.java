@@ -26,10 +26,11 @@ public class RestaurantReview {
   private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드
-  public static RestaurantReview create(Integer restaurantId, Integer customerId,
+  public static RestaurantReview fromEntity(Integer id, Integer restaurantId, Integer customerId,
       Integer reviewRating, String reviewCaption,
       Timestamp createdAt, Timestamp updatedAt, Boolean isDeleted, Timestamp deletedAt) {
     RestaurantReview restaurantReview = new RestaurantReview();
+    restaurantReview.id = id;
     restaurantReview.restaurantId = restaurantId;
     restaurantReview.customerId = customerId;
     restaurantReview.reviewRating = reviewRating;

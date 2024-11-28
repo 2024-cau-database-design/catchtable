@@ -25,13 +25,15 @@ public class Pickup {
   private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드
-  public static Pickup create(Integer pickedAt, Integer pickupTimeId, LocalDate pickupDate,
-      Timestamp createdAt, Boolean isDeleted, Timestamp deletedAt) {
+  public static Pickup fromEntity(Integer id, Integer pickedAt, Integer pickupTimeId, LocalDate pickupDate,
+      Timestamp createdAt, Timestamp updatedAt, Boolean isDeleted, Timestamp deletedAt) {
     Pickup pickup = new Pickup();
+    pickup.id = id;
     pickup.pickedAt = pickedAt;
     pickup.pickupTimeId = pickupTimeId;
     pickup.pickupDate = pickupDate;
     pickup.createdAt = createdAt.toLocalDateTime();
+    pickup.updatedAt = updatedAt.toLocalDateTime();
     pickup.isDeleted = isDeleted;
     pickup.deletedAt = toLocalDateTimeOrNull(deletedAt);
     return pickup;

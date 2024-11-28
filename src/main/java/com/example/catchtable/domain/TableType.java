@@ -14,8 +14,9 @@ public class TableType {
   private String typeName;
 
   // 정적 팩토리 메소드
-  public static TableType fromEntity(String typeName) {
+  public static TableType fromEntity(Integer id, String typeName) {
     TableType tableType = new TableType();
+    tableType.id = id;
     tableType.typeName = typeName;
     return tableType;
   }
