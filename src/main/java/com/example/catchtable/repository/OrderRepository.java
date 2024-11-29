@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -28,14 +29,14 @@ public class OrderRepository {
 
   private final RowMapper<Order> orderRowMapper = (rs, rowNum) ->
       Order.fromEntity(
-          rs.getInt("id"), // id 필드 추가
-          rs.getInt("restaurant_id"),
-          rs.getInt("customer_id"),
-          rs.getInt("booking_id"),
-          rs.getInt("status_id"),
-          rs.getInt("total_price"),
-          rs.getInt("reservation_fee"),
-          rs.getTimestamp("created_at")
+          rs.getLong("id"), // int unsigned -> Long
+          rs.getLong("status_id"), // int unsigned -> Long
+          rs.getTimestamp("created_at"), // Timestamp -> LocalDateTime
+          rs.getLong("total_price"), // int unsigned -> Long
+          rs.getLong("restaurant_id"), // int unsigned -> Long
+          rs.getLong("customer_id"), // int unsigned -> Long
+          rs.getLong("reservation_fee"), // int unsigned -> Long
+          rs.getLong("booking_id") // int unsigned -> Long
       );
 
   public Optional<Order> save(Order entity) {
@@ -52,16 +53,16 @@ public class OrderRepository {
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-      ps.setInt(1, entity.getRestaurantId());
-      ps.setInt(2, entity.getCustomerId());
-      ps.setInt(3, entity.getBookingId());
-      ps.setInt(4, entity.getStatusId());
-      ps.setInt(5, entity.getTotalPrice());
-      ps.setInt(6, entity.getReservationFee());
+      ps.setLong(1, entity.getRestaurantId()); // int -> Long
+      ps.setLong(2, entity.getCustomerId()); // int -> Long
+      ps.setLong(3, entity.getBookingId()); // int -> Long
+      ps.setLong(4, entity.getStatusId()); // int -> Long
+      ps.setLong(5, entity.getTotalPrice()); // int -> Long
+      ps.setLong(6, entity.getReservationFee()); // int -> Long
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById(Objects.requireNonNull(key).longValue()); // int -> Long
   }
 
   private Optional<Order> update(Order entity) {
@@ -73,17 +74,20 @@ public class OrderRepository {
   }
 
   public Iterable<Order> saveAll(Iterable<Order> entities) {
-    entities.iterator().forEachRemaining(this::save);
-    return findAll(entities);
+    List<Order> result = new ArrayList<>();
+    for (Order entity : entities) {
+      save(entity).ifPresent(result::add); // save 결과를 리스트에 추가
+    }
+    return result;
   }
 
-  public Optional<Order> findById(Integer id) {
+  public Optional<Order> findById(Long id) { // Integer -> Long
     String sql = "SELECT * FROM `order` WHERE id = ?";
     List<Order> result = jdbcTemplate.query(sql, orderRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) { // Integer -> Long
     String sql = "SELECT count(*) FROM `order` WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -95,13 +99,10 @@ public class OrderRepository {
   }
 
   public Iterable<Order> findAll(Iterable<Order> entities) {
-    List<Order> resultList = new ArrayList<>();
-    for (Order entity : entities) {
-      if (existsById(entity.getId())) {
-        resultList.add(entity);
-      }
-    }
-    return resultList;
+    List<Long> ids = new ArrayList<>();
+    entities.forEach(entity -> ids.add(entity.getId()));
+    String sql = "SELECT * FROM `order` WHERE id IN (?)";
+    return jdbcTemplate.query(sql, orderRowMapper, ids);
   }
 
   public long count() {
@@ -110,7 +111,7 @@ public class OrderRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) { // Integer -> Long
     String sql = "DELETE FROM `order` WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }

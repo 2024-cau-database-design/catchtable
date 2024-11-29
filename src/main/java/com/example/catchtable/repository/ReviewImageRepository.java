@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -28,12 +27,10 @@ public class ReviewImageRepository {
 
   private final RowMapper<ReviewImage> reviewImageRowMapper = (rs, rowNum) ->
       ReviewImage.fromEntity(
-          rs.getInt("id"),
-          rs.getInt("review_id"),
-          rs.getString("url"),
-          rs.getTimestamp("created_at"),
-          rs.getBoolean("is_deleted"),
-          rs.getTimestamp("deleted_at")
+          rs.getLong("id"),
+          rs.getLong("review_id"),
+          rs.getString("name"),
+          rs.getString("url")
       );
 
   public Optional<ReviewImage> save(ReviewImage entity) {
@@ -45,36 +42,32 @@ public class ReviewImageRepository {
   }
 
   private Optional<ReviewImage> insert(ReviewImage entity) {
-    String sql = "INSERT INTO review_image (review_id, url) VALUES (?, ?)";
+    String sql = "INSERT INTO review_image (review_id, name, url) VALUES (?, ?, ?)";
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-      ps.setInt(1, entity.getReviewId());
-      ps.setString(2, entity.getUrl());
+      ps.setLong(1, entity.getReviewId());
+      ps.setString(2, entity.getName());
+      ps.setString(3, entity.getUrl());
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById(Objects.requireNonNull(key).longValue());
   }
 
   private Optional<ReviewImage> update(ReviewImage entity) {
-    String sql = "UPDATE review_image SET review_id = ?, url = ? WHERE id = ?";
-    jdbcTemplate.update(sql, entity.getReviewId(), entity.getUrl(), entity.getId());
+    String sql = "UPDATE review_image SET review_id = ?, name = ?, url = ? WHERE id = ?";
+    jdbcTemplate.update(sql, entity.getReviewId(), entity.getName(), entity.getUrl(), entity.getId());
     return findById(entity.getId());
   }
 
-  public Iterable<ReviewImage> saveAll(Iterable<ReviewImage> entities) {
-    entities.iterator().forEachRemaining(this::save);
-    return findAll(entities);
-  }
-
-  public Optional<ReviewImage> findById(Integer id) {
+  public Optional<ReviewImage> findById(Long id) {
     String sql = "SELECT * FROM review_image WHERE id = ?";
     List<ReviewImage> result = jdbcTemplate.query(sql, reviewImageRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) {
     String sql = "SELECT count(*) FROM review_image WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -83,6 +76,11 @@ public class ReviewImageRepository {
   public Iterable<ReviewImage> findAll() {
     String sql = "SELECT * FROM review_image";
     return jdbcTemplate.query(sql, reviewImageRowMapper);
+  }
+
+  public Iterable<ReviewImage> saveAll(Iterable<ReviewImage> entities) {
+    entities.forEach(this::save);
+    return findAll(entities);
   }
 
   public Iterable<ReviewImage> findAll(Iterable<ReviewImage> entities) {
@@ -101,7 +99,7 @@ public class ReviewImageRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) {
     String sql = "DELETE FROM review_image WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }
@@ -111,7 +109,7 @@ public class ReviewImageRepository {
   }
 
   public void deleteAll(Iterable<ReviewImage> entities) {
-    entities.iterator().forEachRemaining(this::delete);
+    entities.forEach(this::delete);
   }
 
   public void deleteAll() {

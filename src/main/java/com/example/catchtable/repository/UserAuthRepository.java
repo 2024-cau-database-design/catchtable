@@ -28,7 +28,7 @@ public class UserAuthRepository {
 
   private final RowMapper<UserAuth> userAuthRowMapper = (rs, rowNum) ->
       UserAuth.fromEntity(
-          rs.getInt("id"),
+          rs.getLong("id"),
           rs.getString("password_hash"),
           rs.getString("ident"),
           rs.getString("email"),
@@ -54,7 +54,7 @@ public class UserAuthRepository {
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
       ps.setString(1, entity.getPasswordHash());
-      ps.setString(2, entity.getIdent());
+      ps.setString(2, entity.getLoginId());
       ps.setString(3, entity.getEmail());
       ps.setTimestamp(4, Timestamp.valueOf(entity.getCreatedAt()));
       ps.setTimestamp(5, Timestamp.valueOf(entity.getUpdatedAt()));
@@ -62,7 +62,7 @@ public class UserAuthRepository {
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById(Objects.requireNonNull(key).longValue());
   }
 
   private Optional<UserAuth> update(UserAuth entity) {
@@ -70,7 +70,7 @@ public class UserAuthRepository {
         "WHERE id = ?";
     jdbcTemplate.update(sql,
         entity.getPasswordHash(),
-        entity.getIdent(),
+        entity.getLoginId(),
         entity.getEmail(),
         Timestamp.valueOf(entity.getUpdatedAt()),
         entity.getId());
@@ -82,13 +82,13 @@ public class UserAuthRepository {
     return findAll(entities); // 존재하는 객체들만 반환
   }
 
-  public Optional<UserAuth> findById(Integer id) {
+  public Optional<UserAuth> findById(Long id) {
     String sql = "SELECT * FROM user_auth WHERE id = ?";
     List<UserAuth> result = jdbcTemplate.query(sql, userAuthRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) {
     String sql = "SELECT count(*) FROM user_auth WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0; // count가 0보다 크면 존재하는 것으로 간주
@@ -115,7 +115,7 @@ public class UserAuthRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) {
     String sql = "DELETE FROM user_auth WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }

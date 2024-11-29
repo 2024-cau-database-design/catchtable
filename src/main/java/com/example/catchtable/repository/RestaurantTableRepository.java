@@ -28,9 +28,9 @@ public class RestaurantTableRepository {
 
   private final RowMapper<RestaurantTable> restaurantTableRowMapper = (rs, rowNum) ->
       RestaurantTable.fromEntity(
-          rs.getInt("id"),
-          rs.getInt("restaurant_id"),
-          rs.getInt("table_type"),
+          rs.getLong("id"),
+          rs.getLong("restaurant_id"),
+          rs.getLong("table_type_id"),
           rs.getInt("seat_capacity"),
           rs.getTimestamp("created_at"),
           rs.getTimestamp("updated_at"),
@@ -47,40 +47,35 @@ public class RestaurantTableRepository {
   }
 
   private Optional<RestaurantTable> insert(RestaurantTable entity) {
-    String sql = "INSERT INTO restaurant_table (restaurant_id, table_type, seat_capacity) " +
+    String sql = "INSERT INTO restaurant_table (restaurant_id, table_type_id, seat_capacity) " +
         "VALUES (?, ?, ?)";
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-      ps.setInt(1, entity.getRestaurantId());
-      ps.setInt(2, entity.getTableType());
+      ps.setLong(1, entity.getRestaurantId());
+      ps.setLong(2, entity.getTableTypeId());
       ps.setInt(3, entity.getSeatCapacity());
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById(Objects.requireNonNull(key).longValue());
   }
 
   private Optional<RestaurantTable> update(RestaurantTable entity) {
-    String sql = "UPDATE restaurant_table SET restaurant_id = ?, table_type = ?, " +
+    String sql = "UPDATE restaurant_table SET restaurant_id = ?, table_type_id = ?, " +
         "seat_capacity = ? WHERE id = ?";
-    jdbcTemplate.update(sql, entity.getRestaurantId(), entity.getTableType(),
+    jdbcTemplate.update(sql, entity.getRestaurantId(), entity.getTableTypeId(),
         entity.getSeatCapacity(), entity.getId());
     return findById(entity.getId());
   }
 
-  public Iterable<RestaurantTable> saveAll(Iterable<RestaurantTable> entities) {
-    entities.iterator().forEachRemaining(this::save);
-    return findAll(entities);
-  }
-
-  public Optional<RestaurantTable> findById(Integer id) {
+  public Optional<RestaurantTable> findById(Long id) {
     String sql = "SELECT * FROM restaurant_table WHERE id = ?";
     List<RestaurantTable> result = jdbcTemplate.query(sql, restaurantTableRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) {
     String sql = "SELECT count(*) FROM restaurant_table WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -89,6 +84,11 @@ public class RestaurantTableRepository {
   public Iterable<RestaurantTable> findAll() {
     String sql = "SELECT * FROM restaurant_table";
     return jdbcTemplate.query(sql, restaurantTableRowMapper);
+  }
+
+  public Iterable<RestaurantTable> saveAll(Iterable<RestaurantTable> entities) {
+    entities.forEach(this::save);
+    return findAll(entities);
   }
 
   public Iterable<RestaurantTable> findAll(Iterable<RestaurantTable> entities) {
@@ -107,7 +107,7 @@ public class RestaurantTableRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) {
     String sql = "DELETE FROM restaurant_table WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }
@@ -117,7 +117,7 @@ public class RestaurantTableRepository {
   }
 
   public void deleteAll(Iterable<RestaurantTable> entities) {
-    entities.iterator().forEachRemaining(this::delete);
+    entities.forEach(this::delete);
   }
 
   public void deleteAll() {

@@ -27,7 +27,7 @@ public class BookingRepository {
 
   private final RowMapper<Booking> bookingRowMapper = (rs, rowNum) ->
       Booking.fromEntity(
-          rs.getInt("id"),
+          rs.getLong("id"),
           rs.getString("type")
       );
 
@@ -49,7 +49,7 @@ public class BookingRepository {
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById(Objects.requireNonNull(key).longValue());
   }
 
   private Optional<Booking> update(Booking entity) {
@@ -63,13 +63,13 @@ public class BookingRepository {
     return findAll(entities);
   }
 
-  public Optional<Booking> findById(Integer id) {
+  public Optional<Booking> findById(Long id) {
     String sql = "SELECT * FROM booking WHERE id = ?";
     List<Booking> result = jdbcTemplate.query(sql, bookingRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) {
     String sql = "SELECT count(*) FROM booking WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -96,7 +96,7 @@ public class BookingRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) {
     String sql = "DELETE FROM booking WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }

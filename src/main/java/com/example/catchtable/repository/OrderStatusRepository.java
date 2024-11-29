@@ -27,7 +27,7 @@ public class OrderStatusRepository {
 
   private final RowMapper<OrderStatus> orderStatusRowMapper = (rs, rowNum) ->
       OrderStatus.fromEntity(
-          rs.getInt("id"),
+          rs.getLong("id"), // int unsigned -> Long
           rs.getString("type")
       );
 
@@ -48,7 +48,7 @@ public class OrderStatusRepository {
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById(Objects.requireNonNull(key).longValue()); // int -> Long
   }
 
   private Optional<OrderStatus> update(OrderStatus entity) {
@@ -58,17 +58,20 @@ public class OrderStatusRepository {
   }
 
   public Iterable<OrderStatus> saveAll(Iterable<OrderStatus> entities) {
-    entities.iterator().forEachRemaining(this::save);
-    return findAll(entities);
+    List<OrderStatus> result = new ArrayList<>();
+    for (OrderStatus entity : entities) {
+      save(entity).ifPresent(result::add); // save 결과를 리스트에 추가
+    }
+    return result;
   }
 
-  public Optional<OrderStatus> findById(Integer id) {
+  public Optional<OrderStatus> findById(Long id) { // Integer -> Long
     String sql = "SELECT * FROM order_status WHERE id = ?";
     List<OrderStatus> result = jdbcTemplate.query(sql, orderStatusRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) { // Integer -> Long
     String sql = "SELECT count(*) FROM order_status WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -80,13 +83,10 @@ public class OrderStatusRepository {
   }
 
   public Iterable<OrderStatus> findAll(Iterable<OrderStatus> entities) {
-    List<OrderStatus> resultList = new ArrayList<>();
-    for (OrderStatus entity : entities) {
-      if (existsById(entity.getId())) {
-        resultList.add(entity);
-      }
-    }
-    return resultList;
+    List<Long> ids = new ArrayList<>();
+    entities.forEach(entity -> ids.add(entity.getId()));
+    String sql = "SELECT * FROM order_status WHERE id IN (?)";
+    return jdbcTemplate.query(sql, orderStatusRowMapper, ids);
   }
 
   public long count() {
@@ -95,7 +95,7 @@ public class OrderStatusRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) { // Integer -> Long
     String sql = "DELETE FROM order_status WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }

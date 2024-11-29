@@ -1,8 +1,6 @@
 package com.example.catchtable.repository;
 
 import com.example.catchtable.domain.Restaurant;
-import com.example.catchtable.domain.RestaurantInfo;
-import java.util.ArrayList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -13,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,12 +28,13 @@ public class RestaurantRepository {
 
   private final RowMapper<Restaurant> restaurantRowMapper = (rs, rowNum) ->
       Restaurant.fromEntity(
-          rs.getInt("id"),
+          rs.getLong("id"), // int unsigned -> Long
           rs.getString("name"),
           rs.getTimestamp("created_at"),
           rs.getTimestamp("updated_at"),
           rs.getBoolean("is_deleted"),
-          rs.getTimestamp("deleted_at")
+          rs.getTimestamp("deleted_at"),
+          rs.getLong("owner_id") // owner_id 필드 추가, int unsigned -> Long
       );
 
 
@@ -52,41 +52,42 @@ public class RestaurantRepository {
   }
 
   private Optional<Restaurant> insert(Restaurant entity) {
-    String sql = "INSERT INTO restaurant (name, created_at, updated_at, is_deleted) VALUES (?, ?, ?, ?)";
+    String sql = "INSERT INTO restaurant (name, owner_id) VALUES (?, ?)"; // owner_id 추가
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
       ps.setString(1, entity.getName());
-      ps.setTimestamp(2, Timestamp.valueOf(entity.getCreatedAt()));
-      ps.setTimestamp(3, Timestamp.valueOf(entity.getUpdatedAt()));
-      ps.setBoolean(4, entity.getIsDeleted());
+      ps.setLong(2, entity.getOwnerId()); // owner_id 추가
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue()); // Return the created entity
+    return findById(Objects.requireNonNull(key).longValue()); // int -> Long
   }
 
   private Optional<Restaurant> update(Restaurant entity) {
     String sql = "UPDATE restaurant SET name = ?, updated_at = ? WHERE id = ?";
     jdbcTemplate.update(sql, entity.getName(), Timestamp.valueOf(entity.getUpdatedAt()), entity.getId());
-    return findById(entity.getId()); // Return the updated entity
+    return findById(entity.getId());
   }
 
   public Iterable<Restaurant> saveAll(Iterable<Restaurant> entities) {
-    entities.iterator().forEachRemaining(this::save);
-    return findAll(entities); // 존재하는 객체들만 반환
+    List<Restaurant> result = new ArrayList<>();
+    for (Restaurant entity : entities) {
+      save(entity).ifPresent(result::add); // save 결과를 리스트에 추가
+    }
+    return result;
   }
 
-  public Optional<Restaurant> findById(Integer id) {
+  public Optional<Restaurant> findById(Long id) { // Integer -> Long
     String sql = "SELECT * FROM restaurant WHERE id = ?";
     List<Restaurant> result = jdbcTemplate.query(sql, restaurantRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) { // Integer -> Long
     String sql = "SELECT count(*) FROM restaurant WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
-    return Optional.ofNullable(result).orElse(0L) > 0; // count가 0보다 크면 존재하는 것으로 간주
+    return Optional.ofNullable(result).orElse(0L) > 0;
   }
 
   public Iterable<Restaurant> findAll() {
@@ -95,13 +96,10 @@ public class RestaurantRepository {
   }
 
   public Iterable<Restaurant> findAll(Iterable<Restaurant> entities) {
-    List<Restaurant> resultList = new ArrayList<>();
-    for (Restaurant entity : entities) {
-      if (existsById(entity.getId())) {
-        resultList.add(entity);
-      }
-    }
-    return resultList;
+    List<Long> ids = new ArrayList<>();
+    entities.forEach(entity -> ids.add(entity.getId()));
+    String sql = "SELECT * FROM restaurant WHERE id IN (?)";
+    return jdbcTemplate.query(sql, restaurantRowMapper, ids);
   }
 
   public long count() {
@@ -110,7 +108,7 @@ public class RestaurantRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) { // Integer -> Long
     String sql = "DELETE FROM restaurant WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }
@@ -119,7 +117,7 @@ public class RestaurantRepository {
     deleteById(entity.getId());
   }
 
-  public void deleteAll(Iterable<Restaurant> entities) {
+  public void deleteAll(Iterable<? extends Restaurant> entities) {
     entities.iterator().forEachRemaining(this::delete);
   }
 
