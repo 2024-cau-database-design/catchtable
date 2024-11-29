@@ -1,6 +1,5 @@
 package com.example.catchtable.domain;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,22 +8,22 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OrderItem {
 
-  private Integer id;
-  private Integer orderId;
-  private Integer menuId;
-  private Integer quantity;
-  private Integer price;
-
+  private Long id; // int unsigned -> Long
+  private Long quantity; // int unsigned -> Long
+  private Long price; // int unsigned -> Long
+  private Long orderId; // int unsigned -> Long
+  private Long menuId; // int unsigned -> Long
 
   // 정적 팩토리 메소드
-  public static OrderItem fromEntity(Integer id, Integer orderId, Integer menuId,
-      Integer quantity, Integer price) {
+  public static OrderItem fromEntity(
+      final Long id, final Long quantity, final Long price,
+      final Long orderId, final Long menuId) {
     OrderItem orderItem = new OrderItem();
     orderItem.id = id;
-    orderItem.orderId = orderId;
-    orderItem.menuId = menuId;
     orderItem.quantity = quantity;
     orderItem.price = price;
+    orderItem.orderId = orderId;
+    orderItem.menuId = menuId;
     return orderItem;
   }
 

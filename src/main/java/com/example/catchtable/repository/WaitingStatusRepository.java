@@ -27,7 +27,7 @@ public class WaitingStatusRepository {
 
   private final RowMapper<WaitingStatus> waitingStatusRowMapper = (rs, rowNum) ->
       WaitingStatus.fromEntity(
-          rs.getInt("id"),
+          rs.getLong("id"),
           rs.getString("type")
       );
 
@@ -48,7 +48,7 @@ public class WaitingStatusRepository {
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById(Objects.requireNonNull(key).longValue());
   }
 
   private Optional<WaitingStatus> update(WaitingStatus entity) {
@@ -62,13 +62,13 @@ public class WaitingStatusRepository {
     return findAll(entities);
   }
 
-  public Optional<WaitingStatus> findById(Integer id) {
+  public Optional<WaitingStatus> findById(Long id) {
     String sql = "SELECT * FROM waiting_status WHERE id = ?";
     List<WaitingStatus> result = jdbcTemplate.query(sql, waitingStatusRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) {
     String sql = "SELECT count(*) FROM waiting_status WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -95,7 +95,7 @@ public class WaitingStatusRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) {
     String sql = "DELETE FROM waiting_status WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }

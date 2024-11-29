@@ -11,12 +11,12 @@ import java.sql.Time;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PickupTime {
 
-  private Integer id;
-  private Integer restaurantId;
+  private Long id; // int unsigned -> Long
+  private Long restaurantId; // int unsigned -> Long
   private Time time;
 
   // 정적 팩토리 메소드
-  public static PickupTime fromEntity(Integer id, Time time, Integer restaurantId) {
+  public static PickupTime fromEntity(Long id, Time time, Long restaurantId) {
     PickupTime pickupTime = new PickupTime();
     pickupTime.id = id;
     pickupTime.time = time;

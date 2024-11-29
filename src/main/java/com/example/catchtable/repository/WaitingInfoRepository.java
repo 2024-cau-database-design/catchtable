@@ -27,10 +27,10 @@ public class WaitingInfoRepository {
 
   private final RowMapper<WaitingInfo> waitingInfoRowMapper = (rs, rowNum) ->
       WaitingInfo.fromEntity(
-          rs.getInt("waiting_id"),
+          rs.getLong("waiting_id"),
           rs.getInt("party_size"),
-          rs.getInt("restaurant_id"),
-          rs.getInt("customer_id")
+          rs.getLong("restaurant_id"),
+          rs.getLong("customer_id")
       );
 
   public Optional<WaitingInfo> save(WaitingInfo entity) {
@@ -46,13 +46,13 @@ public class WaitingInfoRepository {
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-      ps.setInt(1, entity.getPartySize());
-      ps.setInt(2, entity.getRestaurantId());
-      ps.setInt(3, entity.getCustomerId());
+      ps.setLong(1, entity.getPartySize());
+      ps.setLong(2, entity.getRestaurantId());
+      ps.setLong(3, entity.getCustomerId());
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findByWaitingId(Objects.requireNonNull(key).intValue());
+    return findByWaitingId(Objects.requireNonNull(key).longValue());
   }
 
   private Optional<WaitingInfo> update(WaitingInfo entity) {
@@ -66,13 +66,13 @@ public class WaitingInfoRepository {
     return findAll(entities);
   }
 
-  public Optional<WaitingInfo> findByWaitingId(Integer waitingId) {
+  public Optional<WaitingInfo> findByWaitingId(Long waitingId) {
     String sql = "SELECT * FROM waiting_info WHERE waiting_id = ?";
     List<WaitingInfo> result = jdbcTemplate.query(sql, waitingInfoRowMapper, waitingId);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer waitingId) {
+  public boolean existsById(Long waitingId) {
     String sql = "SELECT count(*) FROM waiting_info WHERE waiting_id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, waitingId);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -99,7 +99,7 @@ public class WaitingInfoRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteByWaitingId(Integer waitingId) {
+  public void deleteByWaitingId(Long waitingId) {
     String sql = "DELETE FROM waiting_info WHERE waiting_id = ?";
     jdbcTemplate.update(sql, waitingId);
   }

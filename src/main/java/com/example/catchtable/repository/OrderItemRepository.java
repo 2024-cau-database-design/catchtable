@@ -27,11 +27,11 @@ public class OrderItemRepository {
 
   private final RowMapper<OrderItem> orderItemRowMapper = (rs, rowNum) ->
       OrderItem.fromEntity(
-          rs.getInt("id"),
-          rs.getInt("order_id"),
-          rs.getInt("menu_id"),
-          rs.getInt("quantity"),
-          rs.getInt("price")
+          rs.getLong("id"), // int unsigned -> Long
+          rs.getLong("quantity"), // int unsigned -> Long
+          rs.getLong("price"), // int unsigned -> Long
+          rs.getLong("order_id"), // int unsigned -> Long
+          rs.getLong("menu_id") // int unsigned -> Long
       );
 
   public Optional<OrderItem> save(OrderItem entity) {
@@ -47,14 +47,14 @@ public class OrderItemRepository {
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-      ps.setInt(1, entity.getOrderId());
-      ps.setInt(2, entity.getMenuId());
-      ps.setInt(3, entity.getQuantity());
-      ps.setInt(4, entity.getPrice());
+      ps.setLong(1, entity.getOrderId()); // int -> Long
+      ps.setLong(2, entity.getMenuId()); // int -> Long
+      ps.setLong(3, entity.getQuantity()); // int -> Long
+      ps.setLong(4, entity.getPrice()); // int -> Long
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById(Objects.requireNonNull(key).longValue()); // int -> Long
   }
 
   private Optional<OrderItem> update(OrderItem entity) {
@@ -65,17 +65,20 @@ public class OrderItemRepository {
   }
 
   public Iterable<OrderItem> saveAll(Iterable<OrderItem> entities) {
-    entities.iterator().forEachRemaining(this::save);
-    return findAll(entities);
+    List<OrderItem> result = new ArrayList<>();
+    for (OrderItem entity : entities) {
+      save(entity).ifPresent(result::add); // save 결과를 리스트에 추가
+    }
+    return result;
   }
 
-  public Optional<OrderItem> findById(Integer id) {
+  public Optional<OrderItem> findById(Long id) { // Integer -> Long
     String sql = "SELECT * FROM order_item WHERE id = ?";
     List<OrderItem> result = jdbcTemplate.query(sql, orderItemRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) { // Integer -> Long
     String sql = "SELECT count(*) FROM order_item WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -87,13 +90,10 @@ public class OrderItemRepository {
   }
 
   public Iterable<OrderItem> findAll(Iterable<OrderItem> entities) {
-    List<OrderItem> resultList = new ArrayList<>();
-    for (OrderItem entity : entities) {
-      if (existsById(entity.getId())) {
-        resultList.add(entity);
-      }
-    }
-    return resultList;
+    List<Long> ids = new ArrayList<>();
+    entities.forEach(entity -> ids.add(entity.getId()));
+    String sql = "SELECT * FROM order_item WHERE id IN (?)";
+    return jdbcTemplate.query(sql, orderItemRowMapper, ids);
   }
 
   public long count() {
@@ -102,7 +102,7 @@ public class OrderItemRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) { // Integer -> Long
     String sql = "DELETE FROM order_item WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -28,9 +29,9 @@ public class PaymentRepository {
 
   private final RowMapper<Payment> paymentRowMapper = (rs, rowNum) ->
       Payment.fromEntity(
-          rs.getInt("id"),
-          rs.getInt("amount"),
-          rs.getInt("order_id"),
+          rs.getLong("id"), // int unsigned -> Long
+          rs.getLong("amount"), // int unsigned -> Long
+          rs.getLong("order_id"), // int unsigned -> Long
           rs.getTimestamp("created_at"),
           rs.getTimestamp("updated_at"),
           rs.getBoolean("is_deleted"),
@@ -51,13 +52,13 @@ public class PaymentRepository {
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-      ps.setInt(1, entity.getAmount());
-      ps.setInt(2, entity.getOrderId());
+      ps.setLong(1, entity.getAmount()); // int -> Long
+      ps.setLong(2, entity.getOrderId()); // int -> Long
       ps.setString(3, entity.getMethod());
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById(Objects.requireNonNull(key).longValue()); // int -> Long
   }
 
   private Optional<Payment> update(Payment entity) {
@@ -67,17 +68,20 @@ public class PaymentRepository {
   }
 
   public Iterable<Payment> saveAll(Iterable<Payment> entities) {
-    entities.iterator().forEachRemaining(this::save);
-    return findAll(entities);
+    List<Payment> result = new ArrayList<>();
+    for (Payment entity : entities) {
+      save(entity).ifPresent(result::add); // save 결과를 리스트에 추가
+    }
+    return result;
   }
 
-  public Optional<Payment> findById(Integer id) {
+  public Optional<Payment> findById(Long id) { // Integer -> Long
     String sql = "SELECT * FROM payment WHERE id = ?";
     List<Payment> result = jdbcTemplate.query(sql, paymentRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) { // Integer -> Long
     String sql = "SELECT count(*) FROM payment WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -89,13 +93,10 @@ public class PaymentRepository {
   }
 
   public Iterable<Payment> findAll(Iterable<Payment> entities) {
-    List<Payment> resultList = new ArrayList<>();
-    for (Payment entity : entities) {
-      if (existsById(entity.getId())) {
-        resultList.add(entity);
-      }
-    }
-    return resultList;
+    List<Long> ids = new ArrayList<>();
+    entities.forEach(entity -> ids.add(entity.getId()));
+    String sql = "SELECT * FROM payment WHERE id IN (?)";
+    return jdbcTemplate.query(sql, paymentRowMapper, ids);
   }
 
   public long count() {
@@ -104,7 +105,7 @@ public class PaymentRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) { // Integer -> Long
     String sql = "DELETE FROM payment WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }

@@ -28,12 +28,12 @@ public class PaymentHistoryRepository {
 
   private final RowMapper<PaymentHistory> paymentHistoryRowMapper = (rs, rowNum) ->
       PaymentHistory.fromEntity(
-          rs.getInt("id"),
-          rs.getInt("method"),
-          rs.getInt("amount"),
-          rs.getInt("status"),
-          rs.getDate("transaction_date"),
-          rs.getInt("payment_id")
+          rs.getLong("id"), // int unsigned -> Long
+          rs.getString("method"), // int -> String
+          rs.getLong("amount"), // int unsigned -> Long
+          rs.getLong("status"), // int unsigned -> Long
+          rs.getDate("transaction_date").toLocalDate(), // Date -> LocalDate
+          rs.getLong("payment_id") // int unsigned -> Long
       );
 
   public Optional<PaymentHistory> save(PaymentHistory entity) {
@@ -49,36 +49,39 @@ public class PaymentHistoryRepository {
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-      ps.setInt(1, entity.getMethod());
-      ps.setInt(2, entity.getAmount());
-      ps.setInt(3, entity.getStatus());
-      ps.setDate(4, entity.getTransactionDate());
-      ps.setInt(5, entity.getPaymentId());
+      ps.setString(1, entity.getMethod()); // int -> String
+      ps.setLong(2, entity.getAmount()); // int -> Long
+      ps.setLong(3, entity.getStatus()); // int -> Long
+      ps.setDate(4, Date.valueOf(entity.getTransactionDate())); // LocalDate -> Date
+      ps.setLong(5, entity.getPaymentId()); // int -> Long
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById(Objects.requireNonNull(key).longValue()); // int -> Long
   }
 
   private Optional<PaymentHistory> update(PaymentHistory entity) {
     String sql = "UPDATE payment_history SET method = ?, amount = ?, status = ?, transaction_date = ?, payment_id = ? WHERE id = ?";
     jdbcTemplate.update(sql, entity.getMethod(), entity.getAmount(), entity.getStatus(),
-        entity.getTransactionDate(), entity.getPaymentId(), entity.getId());
+        Date.valueOf(entity.getTransactionDate()), entity.getPaymentId(), entity.getId()); // LocalDate -> Date
     return findById(entity.getId());
   }
 
   public Iterable<PaymentHistory> saveAll(Iterable<PaymentHistory> entities) {
-    entities.iterator().forEachRemaining(this::save);
-    return findAll(entities);
+    List<PaymentHistory> result = new ArrayList<>();
+    for (PaymentHistory entity : entities) {
+      save(entity).ifPresent(result::add); // save 결과를 리스트에 추가
+    }
+    return result;
   }
 
-  public Optional<PaymentHistory> findById(Integer id) {
+  public Optional<PaymentHistory> findById(Long id) { // Integer -> Long
     String sql = "SELECT * FROM payment_history WHERE id = ?";
     List<PaymentHistory> result = jdbcTemplate.query(sql, paymentHistoryRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) { // Integer -> Long
     String sql = "SELECT count(*) FROM payment_history WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -90,13 +93,10 @@ public class PaymentHistoryRepository {
   }
 
   public Iterable<PaymentHistory> findAll(Iterable<PaymentHistory> entities) {
-    List<PaymentHistory> resultList = new ArrayList<>();
-    for (PaymentHistory entity : entities) {
-      if (existsById(entity.getId())) {
-        resultList.add(entity);
-      }
-    }
-    return resultList;
+    List<Long> ids = new ArrayList<>();
+    entities.forEach(entity -> ids.add(entity.getId()));
+    String sql = "SELECT * FROM payment_history WHERE id IN (?)";
+    return jdbcTemplate.query(sql, paymentHistoryRowMapper, ids);
   }
 
   public long count() {
@@ -105,7 +105,7 @@ public class PaymentHistoryRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) { // Integer -> Long
     String sql = "DELETE FROM payment_history WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }

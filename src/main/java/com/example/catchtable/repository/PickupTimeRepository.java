@@ -28,9 +28,9 @@ public class PickupTimeRepository {
 
   private final RowMapper<PickupTime> pickupTimeRowMapper = (rs, rowNum) ->
       PickupTime.fromEntity(
-          rs.getInt("id"),
+          rs.getLong("id"), // int unsigned -> Long
           rs.getTime("time"),
-          rs.getInt("restaurant_id")
+          rs.getLong("restaurant_id") // int unsigned -> Long
       );
 
   public Optional<PickupTime> save(PickupTime entity) {
@@ -46,12 +46,12 @@ public class PickupTimeRepository {
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-      ps.setInt(1, entity.getRestaurantId());
+      ps.setLong(1, entity.getRestaurantId()); // int -> Long
       ps.setTime(2, entity.getTime());
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById(Objects.requireNonNull(key).longValue()); // int -> Long
   }
 
   private Optional<PickupTime> update(PickupTime entity) {
@@ -61,17 +61,20 @@ public class PickupTimeRepository {
   }
 
   public Iterable<PickupTime> saveAll(Iterable<PickupTime> entities) {
-    entities.iterator().forEachRemaining(this::save);
-    return findAll(entities);
+    List<PickupTime> result = new ArrayList<>();
+    for (PickupTime entity : entities) {
+      save(entity).ifPresent(result::add); // save 결과를 리스트에 추가
+    }
+    return result;
   }
 
-  public Optional<PickupTime> findById(Integer id) {
+  public Optional<PickupTime> findById(Long id) { // Integer -> Long
     String sql = "SELECT * FROM pickup_time WHERE id = ?";
     List<PickupTime> result = jdbcTemplate.query(sql, pickupTimeRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) { // Integer -> Long
     String sql = "SELECT count(*) FROM pickup_time WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -83,13 +86,10 @@ public class PickupTimeRepository {
   }
 
   public Iterable<PickupTime> findAll(Iterable<PickupTime> entities) {
-    List<PickupTime> resultList = new ArrayList<>();
-    for (PickupTime entity : entities) {
-      if (existsById(entity.getId())) {
-        resultList.add(entity);
-      }
-    }
-    return resultList;
+    List<Long> ids = new ArrayList<>();
+    entities.forEach(entity -> ids.add(entity.getId()));
+    String sql = "SELECT * FROM pickup_time WHERE id IN (?)";
+    return jdbcTemplate.query(sql, pickupTimeRowMapper, ids);
   }
 
   public long count() {
@@ -98,7 +98,7 @@ public class PickupTimeRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) { // Integer -> Long
     String sql = "DELETE FROM pickup_time WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }

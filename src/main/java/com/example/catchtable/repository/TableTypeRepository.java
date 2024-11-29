@@ -27,7 +27,7 @@ public class TableTypeRepository {
 
   private final RowMapper<TableType> tableTypeRowMapper = (rs, rowNum) ->
       TableType.fromEntity(
-          rs.getInt("id"),
+          rs.getLong("id"),
           rs.getString("type_name")
       );
 
@@ -48,7 +48,7 @@ public class TableTypeRepository {
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById(Objects.requireNonNull(key).longValue());
   }
 
   private Optional<TableType> update(TableType entity) {
@@ -62,13 +62,13 @@ public class TableTypeRepository {
     return findAll(entities);
   }
 
-  public Optional<TableType> findById(Integer id) {
+  public Optional<TableType> findById(Long id) {
     String sql = "SELECT * FROM table_type WHERE id = ?";
     List<TableType> result = jdbcTemplate.query(sql, tableTypeRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) {
     String sql = "SELECT count(*) FROM table_type WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -95,7 +95,7 @@ public class TableTypeRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) {
     String sql = "DELETE FROM table_type WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }

@@ -1,41 +1,28 @@
 package com.example.catchtable.domain;
 
-import static com.example.catchtable.util.LocalDateTimeUtil.toLocalDateTimeOrNull;
-
-import jakarta.validation.constraints.NotNull;
-import java.sql.Timestamp;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MenuImage {
 
-  private Integer id;
+  private Long id; // int unsigned -> Long
   private String name;
   private String url;
-  private Integer menuId; // FK 확인 필요: review_id? menu_id?
-  private LocalDateTime createdAt;
-  private Boolean isDeleted;
-
-
-  private LocalDateTime deletedAt;
+  private Long menuId; // int unsigned -> Long, review_id -> menuId
 
   // 정적 팩토리 메소드
   public static MenuImage fromEntity(
-      final Integer id, final String name, final String url, final Integer menuId,
-      final Timestamp createdAt, final Boolean isDeleted, final Timestamp deletedAt) {
+      final Long id, final String name, final String url, final Long menuId) {
     MenuImage menuImage = new MenuImage();
     menuImage.id = id;
     menuImage.name = name;
     menuImage.url = url;
     menuImage.menuId = menuId;
-    menuImage.createdAt = createdAt.toLocalDateTime();
-    menuImage.isDeleted = isDeleted;
-    menuImage.deletedAt = toLocalDateTimeOrNull(deletedAt);
     return menuImage;
   }
+
+  // ... (필요한 비즈니스 로직 추가)
 }

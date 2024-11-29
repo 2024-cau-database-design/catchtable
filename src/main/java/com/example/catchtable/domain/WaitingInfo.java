@@ -1,6 +1,5 @@
 package com.example.catchtable.domain;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,14 +8,14 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class WaitingInfo {
 
-  private Integer waitingId;
+  private Long waitingId; // int unsigned -> Long
   private Integer partySize;
-  private Integer restaurantId;
-  private Integer customerId;
+  private Long restaurantId; // int unsigned -> Long
+  private Long customerId; // int unsigned -> Long
 
   // 정적 팩토리 메소드
   public static WaitingInfo fromEntity(
-      final Integer waitingId, final Integer partySize, final Integer restaurantId, final Integer customerId) {
+      final Long waitingId, final Integer partySize, final Long restaurantId, final Long customerId) {
     WaitingInfo waitingInfo = new WaitingInfo();
     waitingInfo.waitingId = waitingId;
     waitingInfo.partySize = partySize;
@@ -24,4 +23,6 @@ public class WaitingInfo {
     waitingInfo.customerId = customerId;
     return waitingInfo;
   }
+
+  // ... (필요한 비즈니스 로직 추가)
 }
