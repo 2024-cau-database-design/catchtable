@@ -2,21 +2,19 @@ package com.example.catchtable.domain;
 
 import static com.example.catchtable.util.LocalDateTimeUtil.toLocalDateTimeOrNull;
 
-import jakarta.validation.constraints.NotNull;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RestaurantTable {
 
-  private Integer id;
-  private Integer restaurantId;
-  private Integer tableType;
+  private Long id; // int unsigned -> Long
+  private Long restaurantId; // int unsigned -> Long
+  private Long tableTypeId; // int unsigned -> Long, tableType -> tableTypeId
   private Integer seatCapacity;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
@@ -24,12 +22,13 @@ public class RestaurantTable {
   private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드
-  public static RestaurantTable fromEntity(Integer id, Integer restaurantId, Integer tableType, Integer seatCapacity,
-      Timestamp createdAt, Timestamp updatedAt, Boolean isDeleted, Timestamp deletedAt) {
+  public static RestaurantTable fromEntity(
+      final Long id, final Long restaurantId, final Long tableTypeId, final Integer seatCapacity, // 타입 변경 및 필드명 수정
+      final Timestamp createdAt, final Timestamp updatedAt, final Boolean isDeleted, final Timestamp deletedAt) {
     RestaurantTable restaurantTable = new RestaurantTable();
     restaurantTable.id = id;
     restaurantTable.restaurantId = restaurantId;
-    restaurantTable.tableType = tableType;
+    restaurantTable.tableTypeId = tableTypeId; // 필드명 수정
     restaurantTable.seatCapacity = seatCapacity;
     restaurantTable.createdAt = createdAt.toLocalDateTime();
     restaurantTable.updatedAt = updatedAt.toLocalDateTime();

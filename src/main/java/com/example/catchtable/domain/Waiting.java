@@ -1,8 +1,5 @@
 package com.example.catchtable.domain;
 
-import static com.example.catchtable.util.LocalDateTimeUtil.toLocalDateTimeOrNull;
-
-import jakarta.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
@@ -11,23 +8,25 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Waiting { // Waiting 오타 수정
+public class Waiting {
 
-  private Integer id;
-  private LocalDateTime createdAt;
-  private Integer customerId;
+  private Long id; // int unsigned -> Long
+  private LocalDateTime createdAt; // int -> Long
+  private Long customerId; // int unsigned -> Long
   private Integer guestCount;
-  private Integer restaurantId;
+  private Long restaurantId; // int unsigned -> Long
 
   // 정적 팩토리 메소드
   public static Waiting fromEntity(
-      final Integer id, final Timestamp createdAt, final Integer customerId, final Integer guestCount, final Integer restaurantId) {
+      final Long id, final Timestamp createdAt, final Long customerId, final Integer guestCount, final Long restaurantId) {
     Waiting waiting = new Waiting();
     waiting.id = id;
-    waiting.createdAt = toLocalDateTimeOrNull(createdAt);
+    waiting.createdAt = createdAt.toLocalDateTime();
     waiting.customerId = customerId;
     waiting.guestCount = guestCount;
     waiting.restaurantId = restaurantId;
     return waiting;
   }
+
+  // ... (필요한 비즈니스 로직 추가)
 }

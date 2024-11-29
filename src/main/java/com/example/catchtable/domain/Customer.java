@@ -2,38 +2,28 @@ package com.example.catchtable.domain;
 
 import static com.example.catchtable.util.LocalDateTimeUtil.toLocalDateTimeOrNull;
 
-import jakarta.validation.constraints.NotNull;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import lombok.Setter;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Customer {
 
-  private Integer id;
+  private Long id; // int unsigned -> Long
   private String name;
   private String phoneNumber;
-  private LocalDateTime createdAt;
-  private Boolean isDeleted;
-  private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드
   public static Customer fromEntity(
-      final Integer id, final String name,
-      final String phoneNumber, final Timestamp createdAt,
-      final Boolean isDeleted, final Timestamp deletedAt) {
+      final Long id, final String name, // int unsigned -> Long
+      final String phoneNumber) {
     Customer customer = new Customer();
     customer.id = id;
     customer.name = name;
     customer.phoneNumber = phoneNumber;
-    customer.createdAt = createdAt.toLocalDateTime();
-    customer.isDeleted = isDeleted;
-    customer.deletedAt = toLocalDateTimeOrNull(deletedAt);
     return customer;
   }
 
