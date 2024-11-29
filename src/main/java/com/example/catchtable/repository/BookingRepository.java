@@ -27,6 +27,7 @@ public class BookingRepository {
 
   private final RowMapper<Booking> bookingRowMapper = (rs, rowNum) ->
       Booking.fromEntity(
+          rs.getInt("id"),
           rs.getString("type")
       );
 

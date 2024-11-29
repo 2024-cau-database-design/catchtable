@@ -21,17 +21,24 @@ public class Order {
   private LocalDateTime createdAt;
 
   // 정적 팩토리 메소드
-  public static Order fromEntity(Integer id, Integer restaurantId, Integer customerId, Integer bookingId,
-      Integer reservationFee, Integer statusId, Integer totalPrice, final int reservation_fee,
-      Timestamp createdAt) {
+  public static Order fromEntity(
+          Integer id,
+          Integer restaurantId,
+          Integer customerId,
+          Integer bookingId,
+          Integer reservationFee,
+          Integer statusId,
+          Integer totalPrice,
+          Timestamp createdAt
+  ) {
     Order order = new Order();
     order.id = id;
     order.restaurantId = restaurantId;
     order.customerId = customerId;
     order.bookingId = bookingId;
+    order.reservationFee = reservationFee;
     order.statusId = statusId;
     order.totalPrice = totalPrice;
-    order.reservationFee = reservationFee;
     order.createdAt = createdAt.toLocalDateTime();
     return order;
   }
