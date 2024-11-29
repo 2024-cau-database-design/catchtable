@@ -75,7 +75,7 @@ public class RestaurantInfoRepository {
   }
 
   public Optional<RestaurantInfo> findById(Long id) { // Integer -> Long
-    String sql = "SELECT * FROM restaurant_info WHERE restaurant_id = ?";
+    String sql = "SELECT * FROM restaurant_info WHERE id = ?";
     List<RestaurantInfo> result = jdbcTemplate.query(sql, restaurantInfoRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }

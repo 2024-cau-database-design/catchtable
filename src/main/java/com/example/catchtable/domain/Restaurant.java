@@ -5,10 +5,14 @@ import static com.example.catchtable.util.LocalDateTimeUtil.toLocalDateTimeOrNul
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Restaurant {
 
@@ -36,6 +40,4 @@ public class Restaurant {
     restaurant.ownerId = ownerId;
     return restaurant;
   }
-
-  // ... (필요한 비즈니스 로직 추가)
 }

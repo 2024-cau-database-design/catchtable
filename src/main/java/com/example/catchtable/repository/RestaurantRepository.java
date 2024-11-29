@@ -1,6 +1,7 @@
 package com.example.catchtable.repository;
 
 import com.example.catchtable.domain.Restaurant;
+import java.time.Instant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -38,6 +39,48 @@ public class RestaurantRepository {
       );
 
 
+  // 복합 조건 검색
+  public List<Restaurant> searchByConditions(String keyword, Double latitude, Double longitude, String category, String sort) {
+    StringBuilder sql = new StringBuilder("SELECT * FROM restaurant WHERE is_deleted = false");
+    List<Object> params = new ArrayList<>();
+
+    // 키워드 검색 (이름만 포함)
+    if (keyword != null && !keyword.isBlank()) {
+      sql.append(" AND name LIKE ?");
+      params.add("%" + keyword + "%");
+    }
+
+    // 위치 검색 (좌표 기반)
+    if (latitude != null && longitude != null) {
+      sql.append(" AND ST_Distance_Sphere(point(longitude, latitude), point(?, ?)) <= ?");
+      params.add(longitude);
+      params.add(latitude);
+      params.add(5000); // 5km 반경
+    }
+
+    // 카테고리 검색
+    if (category != null && !category.isBlank()) {
+      sql.append(" AND category = ?");
+      params.add(category);
+    }
+
+    // 정렬
+    sql.append(" ORDER BY ").append(switch (sort) {
+      case "name" -> "name ASC";
+      case "rating" -> "rating DESC";
+      case "distance" -> "ST_Distance_Sphere(point(longitude, latitude), point(?, ?)) ASC";
+      default -> "created_at DESC";
+    });
+
+    // 거리 정렬의 경우 좌표 추가
+    if ("distance".equals(sort)) {
+      params.add(longitude);
+      params.add(latitude);
+    }
+
+    return jdbcTemplate.query(sql.toString(), params.toArray(), restaurantRowMapper);
+  }
+
   public List<Restaurant> findByName(String name) {
     String sql = "SELECT * FROM restaurant WHERE name = ?";
     return jdbcTemplate.query(sql, restaurantRowMapper, name);
@@ -65,8 +108,8 @@ public class RestaurantRepository {
   }
 
   private Optional<Restaurant> update(Restaurant entity) {
-    String sql = "UPDATE restaurant SET name = ?, updated_at = ? WHERE id = ?";
-    jdbcTemplate.update(sql, entity.getName(), Timestamp.valueOf(entity.getUpdatedAt()), entity.getId());
+    String sql = "UPDATE restaurant SET name = ? WHERE id = ?";
+    jdbcTemplate.update(sql, entity.getName(), entity.getId());
     return findById(entity.getId());
   }
 
