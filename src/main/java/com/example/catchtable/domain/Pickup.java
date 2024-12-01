@@ -15,23 +15,25 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Pickup {
 
-  private Integer id;
-  private Integer pickupTimeId;
-  private LocalDate pickupDate;
-  private Integer pickedAt;
+  private Long id; // int unsigned -> Long
+  private LocalDateTime pickedAt; // datetime -> LocalDateTime
+  private LocalDateTime pickupDate;
+  private Long restaurantId; // int unsigned -> Long
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private Boolean isDeleted;
   private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드
-  public static Pickup fromEntity(Integer id, Integer pickedAt, Integer pickupTimeId, LocalDate pickupDate,
-      Timestamp createdAt, Timestamp updatedAt, Boolean isDeleted, Timestamp deletedAt) {
+  public static Pickup fromEntity(
+      final Long id, final Timestamp pickedAt, final LocalDateTime pickupDate, // 타입 변경
+      final Long restaurantId, // 필드 추가
+      final Timestamp createdAt, final Timestamp updatedAt, final Boolean isDeleted, final Timestamp deletedAt) {
     Pickup pickup = new Pickup();
     pickup.id = id;
-    pickup.pickedAt = pickedAt;
-    pickup.pickupTimeId = pickupTimeId;
+    pickup.pickedAt = toLocalDateTimeOrNull(pickedAt);
     pickup.pickupDate = pickupDate;
+    pickup.restaurantId = restaurantId;
     pickup.createdAt = createdAt.toLocalDateTime();
     pickup.updatedAt = updatedAt.toLocalDateTime();
     pickup.isDeleted = isDeleted;
