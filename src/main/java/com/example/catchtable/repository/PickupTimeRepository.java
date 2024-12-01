@@ -28,7 +28,7 @@ public class PickupTimeRepository {
 
   private final RowMapper<PickupTime> pickupTimeRowMapper = (rs, rowNum) ->
       PickupTime.fromEntity(
-          rs.getInt("id"),
+          rs.getLong("id"),
           rs.getTime("time"),
           rs.getInt("restaurant_id")
       );
@@ -51,7 +51,7 @@ public class PickupTimeRepository {
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById((long) Objects.requireNonNull(key).intValue());
   }
 
   private Optional<PickupTime> update(PickupTime entity) {
@@ -65,13 +65,13 @@ public class PickupTimeRepository {
     return findAll(entities);
   }
 
-  public Optional<PickupTime> findById(Integer id) {
+  public Optional<PickupTime> findById(Long id) {
     String sql = "SELECT * FROM pickup_time WHERE id = ?";
     List<PickupTime> result = jdbcTemplate.query(sql, pickupTimeRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) {
     String sql = "SELECT count(*) FROM pickup_time WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -98,7 +98,7 @@ public class PickupTimeRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) {
     String sql = "DELETE FROM pickup_time WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }

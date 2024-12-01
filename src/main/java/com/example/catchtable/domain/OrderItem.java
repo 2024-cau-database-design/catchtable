@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OrderItem {
 
-  private Integer id;
+  private Long id;
   private Integer orderId;
   private Integer menuId;
   private Integer quantity;
@@ -17,7 +17,7 @@ public class OrderItem {
 
 
   // 정적 팩토리 메소드
-  public static OrderItem fromEntity(Integer id, Integer orderId, Integer menuId,
+  public static OrderItem fromEntity(Long id, Integer orderId, Integer menuId,
       Integer quantity, Integer price) {
     OrderItem orderItem = new OrderItem();
     orderItem.id = id;

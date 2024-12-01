@@ -10,11 +10,11 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Booking {
 
-  private Integer id;
+  private Long id;
   private String type;
 
   // 정적 팩토리 메소드
-  public static Booking fromEntity(Integer id, String type) {
+  public static Booking fromEntity(Long id, String type) {
     Booking booking = new Booking();
     booking.id = id;
     booking.type = type;

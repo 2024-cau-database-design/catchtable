@@ -28,7 +28,7 @@ public class OrderRepository {
 
   private final RowMapper<Order> orderRowMapper = (rs, rowNum) ->
       Order.fromEntity(
-          rs.getInt("id"), // id 필드 추가
+          rs.getLong("id"), // id 필드 추가
           rs.getInt("restaurant_id"),
           rs.getInt("customer_id"),
           rs.getInt("booking_id"),
@@ -61,7 +61,7 @@ public class OrderRepository {
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById((long) Objects.requireNonNull(key).intValue());
   }
 
   private Optional<Order> update(Order entity) {
@@ -77,13 +77,13 @@ public class OrderRepository {
     return findAll(entities);
   }
 
-  public Optional<Order> findById(Integer id) {
+  public Optional<Order> findById(Long id) {
     String sql = "SELECT * FROM `order` WHERE id = ?";
     List<Order> result = jdbcTemplate.query(sql, orderRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) {
     String sql = "SELECT count(*) FROM `order` WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -110,7 +110,7 @@ public class OrderRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) {
     String sql = "DELETE FROM `order` WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }

@@ -10,11 +10,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OrderStatus {
 
-  private Integer id;
+  private Long id;
   private String type;
 
   // 정적 팩토리 메소드
-  public static OrderStatus fromEntity(Integer id, String type) {
+  public static OrderStatus fromEntity(Long id, String type) {
     OrderStatus orderStatus = new OrderStatus();
     orderStatus.id = id;
     orderStatus.type = type;

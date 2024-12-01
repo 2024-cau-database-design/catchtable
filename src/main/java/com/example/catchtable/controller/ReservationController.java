@@ -20,7 +20,7 @@ public class ReservationController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Reservation> getReservationById(@PathVariable Integer id) {
+    public ResponseEntity<Reservation> getReservationById(@PathVariable Long id) {
         Optional<Reservation> reservation = reservationRepository.findById(id);
         return reservation.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());

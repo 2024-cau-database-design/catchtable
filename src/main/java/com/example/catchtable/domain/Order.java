@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Order {
 
-  private Integer id;
+  private Long id;
   private Integer restaurantId;
   private Integer customerId;
   private Integer bookingId;
@@ -21,8 +21,8 @@ public class Order {
   private LocalDateTime createdAt;
 
   // 정적 팩토리 메소드
-  public static Order fromEntity(Integer id, Integer restaurantId, Integer customerId, Integer bookingId,
-      Integer reservationFee, Integer statusId, Integer totalPrice, final int reservation_fee,
+  public static Order fromEntity(Long id, Integer restaurantId, Integer customerId, Integer bookingId,
+      Integer statusId, Integer totalPrice, final int reservationFee,
       Timestamp createdAt) {
     Order order = new Order();
     order.id = id;

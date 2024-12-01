@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Reservation {
 
-  private Integer id;
+  private Long id;
   private Integer reservationTimeId;
   private LocalDate bookingDate;
   private Byte guestsCount;
@@ -28,7 +28,7 @@ public class Reservation {
 
 
   // 정적 팩토리 메소드
-  public static Reservation fromEntity(Integer id, Integer reservationTimeId, LocalDate bookingDate,
+  public static Reservation fromEntity(Long id, Integer reservationTimeId, LocalDate bookingDate,
       Byte guestsCount, Integer restaurantTableId,
       Timestamp createdAt, Timestamp updatedAt, Boolean isDeleted, Timestamp deletedAt) {
     Reservation reservation = new Reservation();

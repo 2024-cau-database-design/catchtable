@@ -22,28 +22,23 @@ public class PickupCreateRequestDTO {
     private Long restaurantId; // 레스토랑 ID
 
     @NotNull
-    private LocalDateTime pickupDate; // 픽업 날짜
+    private LocalDateTime pickupAt; // 픽업 날짜
 
     @NotNull
     private List<PickupMenu> pickupMenus; // 픽업 메뉴 목록
-
-    @NotNull
-    private String pickup; // 기타 픽업 정보
 
     // 정적 팩토리 메소드
     public static PickupCreateRequestDTO fromEntity(
             final Long userId,
             final Long restaurantId,
-            final LocalDateTime pickupDate,
-            final List<PickupMenu> pickupMenus,
-            final String pickup
+            final LocalDateTime pickupAt,
+            final List<PickupMenu> pickupMenus
     ) {
         PickupCreateRequestDTO dto = new PickupCreateRequestDTO();
         dto.userId = userId;
         dto.restaurantId = restaurantId;
-        dto.pickupDate = pickupDate;
+        dto.pickupAt = pickupAt;
         dto.pickupMenus = pickupMenus;
-        dto.pickup = pickup;
         return dto;
     }
 

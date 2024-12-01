@@ -11,12 +11,12 @@ import java.sql.Time;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReservationTime {
 
-  private Integer id;
+  private Long id;
   private Integer restaurantId;
   private Time time;
 
   // 정적 팩토리 메소드
-  public static ReservationTime fromEntity(Integer id, Time time, Integer restaurantId) {
+  public static ReservationTime fromEntity(Long id, Time time, Integer restaurantId) {
     ReservationTime reservationTime = new ReservationTime();
     reservationTime.id = id;
     reservationTime.time = time;

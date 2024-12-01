@@ -17,7 +17,8 @@ public class Pickup {
 
   private Long id; // int unsigned -> Long
   private LocalDateTime pickedAt; // datetime -> LocalDateTime
-  private LocalDateTime pickupDate;
+  private LocalDateTime pickupAt;
+  private Long pickupTimeId; // int unsigned -> Long
   private Long restaurantId; // int unsigned -> Long
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
@@ -26,13 +27,14 @@ public class Pickup {
 
   // 정적 팩토리 메소드
   public static Pickup fromEntity(
-      final Long id, final Timestamp pickedAt, final LocalDateTime pickupDate, // 타입 변경
-      final Long restaurantId, // 필드 추가
+      final Long id, final Timestamp pickedAt, final LocalDateTime pickupAt, // 타입 변경
+      final Long pickupTimeId, final Long restaurantId, // 필드 추가
       final Timestamp createdAt, final Timestamp updatedAt, final Boolean isDeleted, final Timestamp deletedAt) {
     Pickup pickup = new Pickup();
     pickup.id = id;
     pickup.pickedAt = toLocalDateTimeOrNull(pickedAt);
-    pickup.pickupDate = pickupDate;
+    pickup.pickupAt = pickupAt;
+    pickup.pickupTimeId = pickupTimeId;
     pickup.restaurantId = restaurantId;
     pickup.createdAt = createdAt.toLocalDateTime();
     pickup.updatedAt = updatedAt.toLocalDateTime();

@@ -33,7 +33,8 @@ public class PickupRepository {
       Pickup.fromEntity(
           rs.getLong("id"), // int unsigned -> Long
           rs.getTimestamp("picked_at"), // int -> Timestamp
-          rs.getTimestamp("pickup_date").toLocalDateTime(),
+          rs.getTimestamp("pickup_at").toLocalDateTime(),
+          rs.getLong("pickup_time_id"), // int unsigned -> Long, 추가
           rs.getLong("restaurant_id"), // int unsigned -> Long, 추가
           rs.getTimestamp("created_at"),
           rs.getTimestamp("updated_at"),
@@ -41,45 +42,48 @@ public class PickupRepository {
           rs.getTimestamp("deleted_at")
       );
 
-  public Optional<Pickup> save(Pickup entity) {
-    if (entity.getId() == null) {
-      return insert(entity);
-    } else {
-      return update(entity);
-    }
-  }
+//  public Optional<Pickup> save(Pickup entity) {
+//    if (entity.getId() == null) {
+//      return insert(entity);
+//    } else {
+//      return update(entity);
+//    }
+//  }
 
-  private Optional<Pickup> insert(Pickup entity) {
-    String sql = "INSERT INTO pickup (picked_at, pickup_time_id, pickup_date, restaurant_id) VALUES (?, ?, ?, ?)"; // restaurant_id 추가
+  public Long insert(Pickup entity) {
+    String sql = "INSERT INTO pickup (id, picked_at, pickup_time_id, pickup_at, restaurant_id) VALUES (?, ?, ?, ?, ?)"; // restaurant_id 추가
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-      ps.setTimestamp(1, Timestamp.valueOf(entity.getPickedAt())); // LocalDateTime -> Timestamp
-      ps.setTimestamp(3, Timestamp.valueOf(entity.getPickupDate()));
-      ps.setLong(4, entity.getRestaurantId()); // Long, 추가
+      ps.setLong(1, entity.getId()); // LocalDateTime -> Timestamp
+      ps.setTimestamp(2, null); // LocalDateTime -> Timestamp
+      ps.setLong(3, entity.getPickupTimeId()); // LocalDateTime -> Timestamp
+      ps.setTimestamp(4, Timestamp.valueOf(entity.getPickupAt()));
+      ps.setLong(5, entity.getRestaurantId()); // Long, 추가
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).longValue()); // int -> Long
+      assert key != null;
+      return key.longValue(); // int -> Long
   }
 
-  private Optional<Pickup> update(Pickup entity) {
+  public Optional<Pickup> update(Pickup entity) {
     String sql = "UPDATE pickup SET picked_at = ?, pickup_time_id = ?, pickup_date = ?, restaurant_id = ? WHERE id = ?"; // restaurant_id 추가
     jdbcTemplate.update(sql,
         Timestamp.valueOf(entity.getPickedAt()), // LocalDateTime -> Timestamp
-        Timestamp.valueOf(entity.getPickupDate()),
+        Timestamp.valueOf(entity.getPickupAt()),
         entity.getRestaurantId(), // Long, 추가
         entity.getId());
     return findById(entity.getId());
   }
 
-  public Iterable<Pickup> saveAll(Iterable<Pickup> entities) {
-    List<Pickup> result = new ArrayList<>();
-    for (Pickup entity : entities) {
-      save(entity).ifPresent(result::add); // save 결과를 리스트에 추가
-    }
-    return result;
-  }
+//  public Iterable<Pickup> saveAll(Iterable<Pickup> entities) {
+//    List<Pickup> result = new ArrayList<>();
+//    for (Pickup entity : entities) {
+//      save(entity).ifPresent(result::add); // save 결과를 리스트에 추가
+//    }
+//    return result;
+//  }
 
   public Optional<Pickup> findById(Long id) { // Integer -> Long
     String sql = "SELECT * FROM pickup WHERE id = ?";
@@ -93,10 +97,23 @@ public class PickupRepository {
     return Optional.ofNullable(result).orElse(0L) > 0;
   }
 
-  public boolean existsByIdAndDate(Long id, LocalDateTime pickupDate) { // Integer -> Long
-    String sql = "SELECT count(*) FROM pickup WHERE id = ? AND pickup_date = ?";
-    Long result = jdbcTemplate.queryForObject(sql, Long.class, id, Timestamp.valueOf(pickupDate));
-    return Optional.ofNullable(result).orElse(0L) > 0;
+  public boolean existsByIdAndDate(Long id, LocalDateTime pickupAt) {
+    String sql = "SELECT count(*) FROM pickup WHERE id = ? AND pickup_at = ?";
+    int[] types = {java.sql.Types.BIGINT, java.sql.Types.TIMESTAMP};
+
+    try {
+      Long result = jdbcTemplate.queryForObject(
+              sql,
+              new Object[]{id, Timestamp.valueOf(pickupAt)}, // 파라미터 값
+              types, // SQL 타입
+              Long.class // 반환 타입
+      );
+      return Optional.ofNullable(result).orElse(0L) > 0;
+    } catch (Exception e) {
+      // 에러 로그 찍기
+      e.printStackTrace(); // 스택 트레이스 출력
+      throw new RuntimeException("Error executing SQL: " + sql, e);
+    }
   }
 
   public Iterable<Pickup> findAll() {

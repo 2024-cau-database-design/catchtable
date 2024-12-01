@@ -29,7 +29,7 @@ public class ReservationRepository {
 
   private final RowMapper<Reservation> reservationRowMapper = (rs, rowNum) ->
       Reservation.fromEntity(
-          rs.getInt("id"),
+          rs.getLong("id"),
           rs.getInt("reservation_time_id"),
           rs.getDate("booking_date").toLocalDate(),
           rs.getByte("guests_count"),
@@ -61,7 +61,7 @@ public class ReservationRepository {
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById((long) Objects.requireNonNull(key).intValue());
   }
 
   private Optional<Reservation> update(Reservation entity) {
@@ -77,13 +77,13 @@ public class ReservationRepository {
     return findAll(entities);
   }
 
-  public Optional<Reservation> findById(Integer id) {
+  public Optional<Reservation> findById(Long id) {
     String sql = "SELECT * FROM reservation WHERE id = ?";
     List<Reservation> result = jdbcTemplate.query(sql, reservationRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) {
     String sql = "SELECT count(*) FROM reservation WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -110,7 +110,7 @@ public class ReservationRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) {
     String sql = "DELETE FROM reservation WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }

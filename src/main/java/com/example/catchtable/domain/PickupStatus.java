@@ -9,11 +9,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PickupStatus {
 
-  private Integer id;
+  private Long id;
   private String type;
 
   // 정적 팩토리 메소드
-  public static PickupStatus fromEntity(final Integer id, final String type) {
+  public static PickupStatus fromEntity(final Long id, final String type) {
     PickupStatus pickupStatus = new PickupStatus();
     pickupStatus.id = id;
     pickupStatus.type = type;

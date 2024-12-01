@@ -7,3 +7,12 @@ spring:
     username: root
     password: 12345678
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+logging:
+  level:
+    root: INFO  # 기본 로그 레벨
+    org.springframework.jdbc.core: DEBUG  # Spring JDBC의 SQL 처리 로그
+    org.springframework.jdbc.datasource: DEBUG  # 데이터 소스 관련 로그
+    org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator: DEBUG  # SQL 에러 상세 로그
+    org.springframework.jdbc.core.StatementCreatorUtils: TRACE
+    com.example: DEBUG  # 사용자 정의 패키지 디버깅 로그

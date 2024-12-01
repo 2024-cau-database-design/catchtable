@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReservationHistory {
 
-  private Integer id;
+  private Long id;
   private Integer statusId;
   private LocalDateTime visitedAt;
   private Integer reservationId;
@@ -23,7 +23,7 @@ public class ReservationHistory {
 
   // 정적 팩토리 메소드
   public static ReservationHistory fromEntity(
-      final Integer id, final Integer statusId, final Timestamp visitedAt, final Integer reservationId, final LocalDate bookingTime, final Integer guestsCount) {
+      final Long id, final Integer statusId, final Timestamp visitedAt, final Integer reservationId, final LocalDate bookingTime, final Integer guestsCount) {
     ReservationHistory reservationHistory = new ReservationHistory();
     reservationHistory.id = id;
     reservationHistory.statusId = statusId;

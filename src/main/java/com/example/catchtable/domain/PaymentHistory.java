@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PaymentHistory {
 
-  private Integer id;
+  private Long id;
   private Integer method;
   private Integer amount;
   private Integer status;
@@ -19,7 +19,7 @@ public class PaymentHistory {
 
   // 정적 팩토리 메소드
   public static PaymentHistory fromEntity(
-      final Integer id, final Integer method, final Integer amount, final Integer status,
+      final Long id, final Integer method, final Integer amount, final Integer status,
       final Date transactionDate, final Integer paymentId) {
     PaymentHistory paymentHistory = new PaymentHistory();
     paymentHistory.id = id;

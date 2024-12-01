@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -68,21 +70,24 @@ public class PickupService {
             null, // id
             "pickup"
     );
-    Optional<Booking> createdBookingOptional = bookingRepository.save(booking);
-    Booking createdBooking = createdBookingOptional.orElseThrow(() -> new IllegalStateException("Failed to create booking"));
+    Long createdBookingId = bookingRepository.insert(booking);
 
     // 3. Pickup 생성
     Pickup pickup = Pickup.fromEntity(
-            createdBooking.getId(), // id는 새로 생성되므로 null
+            createdBookingId, // id는 새로 생성되므로 null
             null, // pickedAt은 아직 처리되지 않음
-            pickupRequest.getPickupDate(),
+            pickupRequest.getPickupAt(),
+            1L, // test pickupTimeId
             pickupRequest.getRestaurantId(),
             Timestamp.valueOf(LocalDateTime.now()), // createdAt
             Timestamp.valueOf(LocalDateTime.now()), // updatedAt
             false, // isDeleted
             null   // deletedAt
     );
-    pickupRepository.save(pickup);
+    ObjectMapper mapper = new ObjectMapper();
+    mapper.registerModule(new JavaTimeModule()); // JavaTimeModule 등록
+
+    pickupRepository.insert(pickup);
 
 //    // 4. PickupHistory 생성
 //    PickupHistory pickupHistory = PickupHistory.fromEntity(
@@ -133,12 +138,14 @@ public class PickupService {
     LocalDateTime now = LocalDateTime.now();
 
     // 1시간 전에만 예약 가능하도록 확인
-    if (pickupRequest.getPickupDate().plusHours(1).isBefore(now)) {
+    if (pickupRequest.getPickupAt().plusHours(1).isBefore(now)) {
       throw new IllegalArgumentException("Pickup time must be at least 1 hour from now.");
     }
+    System.out.println(now);
 
     // 동일 시간대에 이미 예약된 Pickup이 있는지 확인
-    boolean exists = pickupRepository.existsByIdAndDate(pickupRequest.getRestaurantId(), pickupRequest.getPickupDate());
+    boolean exists = pickupRepository.existsByIdAndDate(pickupRequest.getRestaurantId(), pickupRequest.getPickupAt());
+    System.out.println(exists);
     if (exists) {
       throw new IllegalArgumentException("Pickup time is already reserved.");
     }

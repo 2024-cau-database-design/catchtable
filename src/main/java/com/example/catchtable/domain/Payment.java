@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Payment {
 
-  private Integer id;
+  private Long id;
   private Integer amount;
   private Integer orderId;
   private String method;
@@ -29,7 +29,7 @@ public class Payment {
 
   // 정적 팩토리 메소드
   public static Payment fromEntity(
-      final Integer id, final Integer amount, final Integer orderId,
+      final Long id, final Integer amount, final Integer orderId,
       final Timestamp createdAt, final Timestamp updatedAt, final Boolean isDeleted, final Timestamp deletedAt, final String method) {
     Payment payment = new Payment();
     payment.id = id;
