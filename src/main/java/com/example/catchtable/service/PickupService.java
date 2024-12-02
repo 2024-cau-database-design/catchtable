@@ -18,6 +18,7 @@ import com.example.catchtable.repository.PaymentHistoryRepository;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -65,29 +66,31 @@ public class PickupService {
     // 1. 유효성 검사
     validatePickupRequest(pickupRequest);
 
+    Map<String, Object> result = pickupRepository.createBookingAndPickup(pickupRequest.getPickupAt(), pickupRequest.getRestaurantId(), pickupRequest.getUserId(), 1L);
+
     // 2. Booking 생성
-    Booking booking = Booking.fromEntity(
-            null, // id
-            "pickup"
-    );
-    Long createdBookingId = bookingRepository.insert(booking);
-
-    // 3. Pickup 생성
-    Pickup pickup = Pickup.fromEntity(
-            createdBookingId, // id는 새로 생성되므로 null
-            null, // pickedAt은 아직 처리되지 않음
-            pickupRequest.getPickupAt(),
-            1L, // test pickupTimeId
-            pickupRequest.getRestaurantId(),
-            Timestamp.valueOf(LocalDateTime.now()), // createdAt
-            Timestamp.valueOf(LocalDateTime.now()), // updatedAt
-            false, // isDeleted
-            null   // deletedAt
-    );
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.registerModule(new JavaTimeModule()); // JavaTimeModule 등록
-
-    pickupRepository.insert(pickup);
+//    Booking booking = Booking.fromEntity(
+//            null, // id
+//            "pickup"
+//    );
+//    Long createdBookingId = bookingRepository.insert(booking);
+//
+//    // 3. Pickup 생성
+//    Pickup pickup = Pickup.fromEntity(
+//            createdBookingId, // id는 새로 생성되므로 null
+//            null, // pickedAt은 아직 처리되지 않음
+//            pickupRequest.getPickupAt(),
+//            1L, // test pickupTimeId
+//            pickupRequest.getRestaurantId(),
+//            Timestamp.valueOf(LocalDateTime.now()), // createdAt
+//            Timestamp.valueOf(LocalDateTime.now()), // updatedAt
+//            false, // isDeleted
+//            null   // deletedAt
+//    );
+//    ObjectMapper mapper = new ObjectMapper();
+//    mapper.registerModule(new JavaTimeModule()); // JavaTimeModule 등록
+//
+//    pickupRepository.insert(pickup);
 
 //    // 4. PickupHistory 생성
 //    PickupHistory pickupHistory = PickupHistory.fromEntity(

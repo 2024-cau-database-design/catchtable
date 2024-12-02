@@ -2,22 +2,19 @@ package com.example.catchtable.repository;
 
 import com.example.catchtable.domain.Pickup;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.*;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 public class PickupRepository {
@@ -151,4 +148,39 @@ public class PickupRepository {
     String sql = "DELETE FROM pickup";
     jdbcTemplate.update(sql);
   }
+
+  public Map<String, Object> createBookingAndPickup(LocalDateTime pickupAt, Long restaurantId, Long customerId, Long pickupTimeId) {
+    String sql = "{CALL create_booking_and_pickup(?, ?, ?, ?)}";
+
+    return jdbcTemplate.execute((ConnectionCallback<Map<String, Object>>) connection -> {
+      try (CallableStatement callableStatement = connection.prepareCall(sql)) {
+        // Set input parameters
+        callableStatement.setTimestamp(1, Timestamp.valueOf(pickupAt));
+        callableStatement.setLong(2, restaurantId);
+        callableStatement.setLong(3, customerId);
+        callableStatement.setLong(4, pickupTimeId);
+
+        // Execute the procedure
+        boolean hasResultSet = callableStatement.execute();
+
+        // Process the ResultSet
+        Map<String, Object> result = new HashMap<>();
+        if (hasResultSet) {
+          try (ResultSet resultSet = callableStatement.getResultSet()) {
+            if (resultSet.next()) {
+              result.put("booking_id", resultSet.getLong("booking_id"));
+              result.put("pickup_id", resultSet.getLong("pickup_id"));
+            }
+          }
+        }
+
+        return result;
+      } catch (SQLException e) {
+        throw new RuntimeException("Error executing create_booking_and_pickup procedure", e);
+      }
+    });
+  }
+
+
+
 }
