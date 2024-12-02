@@ -17,10 +17,8 @@ import com.example.catchtable.repository.PaymentHistoryRepository;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -62,80 +60,52 @@ public class PickupService {
   }
 
   @Transactional
-  public void createPickup(PickupCreateRequestDTO pickupRequest) {
-    // 1. 유효성 검사
+  public Map<String, Object> createPickup(PickupCreateRequestDTO pickupRequest) {
+    System.out.println("Starting createPickup process...");
+    System.out.println("Pickup Request: " + pickupRequest);
+
+    // 1. Validate the request
     validatePickupRequest(pickupRequest);
+    System.out.println("Validation completed.");
 
-    Map<String, Object> result = pickupRepository.createBookingAndPickup(pickupRequest.getPickupAt(), pickupRequest.getRestaurantId(), pickupRequest.getUserId(), 1L);
+    // 2. Execute the first procedure: create_booking_and_pickup
+    System.out.println("Calling createBookingAndPickup procedure...");
+    Map<String, Object> bookingAndPickupResult = pickupRepository.createBookingAndPickup(
+            pickupRequest.getPickupAt(),
+            pickupRequest.getRestaurantId(),
+            pickupRequest.getUserId(),
+            1L // Example pickupTimeId
+    );
+    System.out.println("createBookingAndPickup Result: " + bookingAndPickupResult);
 
-    // 2. Booking 생성
-//    Booking booking = Booking.fromEntity(
-//            null, // id
-//            "pickup"
-//    );
-//    Long createdBookingId = bookingRepository.insert(booking);
-//
-//    // 3. Pickup 생성
-//    Pickup pickup = Pickup.fromEntity(
-//            createdBookingId, // id는 새로 생성되므로 null
-//            null, // pickedAt은 아직 처리되지 않음
-//            pickupRequest.getPickupAt(),
-//            1L, // test pickupTimeId
-//            pickupRequest.getRestaurantId(),
-//            Timestamp.valueOf(LocalDateTime.now()), // createdAt
-//            Timestamp.valueOf(LocalDateTime.now()), // updatedAt
-//            false, // isDeleted
-//            null   // deletedAt
-//    );
-//    ObjectMapper mapper = new ObjectMapper();
-//    mapper.registerModule(new JavaTimeModule()); // JavaTimeModule 등록
-//
-//    pickupRepository.insert(pickup);
+    Long bookingId = (Long) bookingAndPickupResult.get("booking_id");
 
-//    // 4. PickupHistory 생성
-//    PickupHistory pickupHistory = PickupHistory.fromEntity(
-//            null, // id
-//            pickup.getId(), // pickupId
-//            "CREATED", // status
-//            Timestamp.valueOf(LocalDateTime.now()) // createdAt
-//    );
-//    pickupHistoryRepository.save(pickupHistory);
-//
-//    // 5. Order 생성
-//    Order order = Order.fromEntity(
-//            null, // id
-//            pickup.getId(), // pickupId
-//            Timestamp.valueOf(LocalDateTime.now()) // createdAt
-//    );
-//    orderRepository.save(order);
-//
-//    // 6. OrderItem 생성
-//    OrderItem orderItem = OrderItem.fromEntity(
-//            null, // id
-//            order.getId(), // orderId
-//            "Default Item", // itemName
-//            Timestamp.valueOf(LocalDateTime.now()) // createdAt
-//    );
-//    orderItemRepository.save(orderItem);
-//
-//    // 7. Payment 생성
-//    Payment payment = Payment.fromEntity(
-//            null, // id
-//            order.getId(), // orderId
-//            pickupRequest.getPaymentAmount(), // amount
-//            Timestamp.valueOf(LocalDateTime.now()) // createdAt
-//    );
-//    paymentRepository.save(payment);
-//
-//    // 8. PaymentHistory 생성
-//    PaymentHistory paymentHistory = PaymentHistory.fromEntity(
-//            null, // id
-//            payment.getId(), // paymentId
-//            "INITIATED", // status
-//            Timestamp.valueOf(LocalDateTime.now()) // createdAt
-//    );
-//    paymentHistoryRepository.save(paymentHistory);
+    // 3. Convert PickupMenu to JSON format for the second procedure
+    String menuJson = pickupRequest.getPickupMenus().stream()
+            .map(menu -> String.format("{\"menu_id\":%d,\"quantity\":%d}", menu.getMenuId(), menu.getQuantity()))
+            .collect(Collectors.joining(",", "[", "]"));
+    System.out.println("Generated menu JSON: " + menuJson);
+
+    // 4. Execute the second procedure: create_order_and_items
+    System.out.println("Calling createOrderAndItems procedure...");
+    Map<String, Object> orderResult = orderRepository.createOrderAndItems(
+            bookingId,
+            pickupRequest.getRestaurantId(),
+            pickupRequest.getUserId(),
+            0, // Example reservation fee
+            menuJson
+    );
+    System.out.println("createOrderAndItems Result: " + orderResult);
+
+    // Combine results for the response
+    Map<String, Object> result = new HashMap<>();
+    result.putAll(bookingAndPickupResult);
+    result.putAll(orderResult);
+
+    System.out.println("Final Result: " + result);
+    return result;
   }
+
   private void validatePickupRequest(PickupCreateRequestDTO pickupRequest) {
     // 유효성 검사
     LocalDateTime now = LocalDateTime.now();

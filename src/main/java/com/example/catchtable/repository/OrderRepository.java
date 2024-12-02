@@ -3,18 +3,14 @@ package com.example.catchtable.repository;
 import com.example.catchtable.domain.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.sql.*;
+import java.util.*;
 
 @Repository
 public class OrderRepository {
@@ -126,5 +122,47 @@ public class OrderRepository {
   public void deleteAll() {
     String sql = "DELETE FROM `order`";
     jdbcTemplate.update(sql);
+  }
+
+  public Map<String, Object> createOrderAndItems(
+          Long bookingId,
+          Long restaurantId,
+          Long customerId,
+          Integer reservationFee,
+          String menuJson
+  ) {
+    System.out.println("Calling createOrderAndItems procedure...");
+    System.out.println("bookingId: " + bookingId);
+    System.out.println("restaurantId: " + restaurantId);
+    System.out.println("customerId: " + customerId);
+    System.out.println("reservationFee: " + reservationFee);
+    System.out.println("menuJson: " + menuJson);
+
+    return jdbcTemplate.execute((PreparedStatementCreator) connection -> {
+      CallableStatement callableStatement = connection.prepareCall(
+              "{CALL create_order_and_items(?, ?, ?, ?, ?)}"
+      );
+      // Set input parameters
+      callableStatement.setLong(1, bookingId);
+      callableStatement.setLong(2, restaurantId);
+      callableStatement.setLong(3, customerId);
+      callableStatement.setInt(4, reservationFee);
+      callableStatement.setString(5, menuJson);
+      return callableStatement;
+    }, callableStatement -> {
+      // Execute the procedure
+      callableStatement.execute();
+
+      Map<String, Object> result = new HashMap<>();
+      ResultSet rs = callableStatement.getResultSet();
+      while (rs.next()) {
+        result.put("order_id", rs.getLong("order_id"));
+        result.put("total_price", rs.getInt("total_price"));
+      }
+      rs.close();
+
+      System.out.println("createOrderAndItems Result: " + result);
+      return result;
+    });
   }
 }

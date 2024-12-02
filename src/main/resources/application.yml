@@ -11,7 +11,7 @@ spring:
 logging:
   level:
     root: INFO  # 기본 로그 레벨
-    org.springframework.jdbc.core: DEBUG  # Spring JDBC의 SQL 처리 로그
+    org.springframework.jdbc.core: TRACE  # Spring JDBC의 SQL 처리 로그
     org.springframework.jdbc.datasource: DEBUG  # 데이터 소스 관련 로그
     org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator: DEBUG  # SQL 에러 상세 로그
     org.springframework.jdbc.core.StatementCreatorUtils: TRACE
