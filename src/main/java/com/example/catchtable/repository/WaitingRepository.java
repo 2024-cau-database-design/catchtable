@@ -13,6 +13,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -118,4 +119,31 @@ public class WaitingRepository {
     String sql = "DELETE FROM waiting";
     jdbcTemplate.update(sql);
   }
+  
+  /**
+   * Function 호출하여 history_status update
+   */
+  public String callUpdateWaitingStatus(Long waitingId, Integer newStatusId) {
+	    // MySQL Function 호출 쿼리
+	    String sql = "SELECT UpdateWaitingStatus(?, ?)";
+	    try {
+	        // Function 호출 및 결과 반환
+	        return jdbcTemplate.queryForObject(sql, String.class, waitingId, newStatusId);
+	    } catch (Exception e) {
+	        throw new RuntimeException("Error occurred while calling UpdateWaitingStatus function.", e);
+	    }
+	}
+  
+  /**
+   * 프로시저 호출 및 임시 테이블 데이터 조회
+   */
+  public List<Map<String, Object>> getDynamicRankTable(int restaurantId) {
+      // 1. 프로시저 호출
+      jdbcTemplate.execute("CALL GenerateDynamicRankTable(" + restaurantId + ")");
+
+      // 2. 임시 테이블 데이터 조회
+      String query = "SELECT * FROM dynamic_rank_table";
+      return jdbcTemplate.queryForList(query);
+  }
+
 }

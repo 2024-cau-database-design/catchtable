@@ -3,11 +3,15 @@ package com.example.catchtable.domain;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE) // @Builder와 함께 사용
+@NoArgsConstructor(access = AccessLevel.PROTECTED) // 기본 생성자
 public class WaitingHistory {
 
   private Long id; // int unsigned -> Long

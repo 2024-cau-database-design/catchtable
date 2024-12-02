@@ -25,6 +25,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class RestaurantController {
 
   private final RestaurantService restaurantService;
+  
+  
+  
 
   // 복합 조건 레스토랑 검색
   @GetMapping
@@ -43,6 +46,12 @@ public class RestaurantController {
   public ResponseEntity<RestaurantInfo> getRestaurantInfo(@PathVariable Long id) {
     RestaurantInfo restaurantInfo = restaurantService.getRestaurantDetails(id);
     return ResponseEntity.ok(restaurantInfo);
+  }
+  
+
+  @GetMapping("/health")
+  public ResponseEntity<String> healthCheck() {
+    return ResponseEntity.ok("Running is great!");
   }
 
   // 레스토랑 등록
@@ -87,4 +96,6 @@ public class RestaurantController {
   public ResponseEntity<String> exceptionHandler(RuntimeException e) {
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
   }
+  
+  
 }
