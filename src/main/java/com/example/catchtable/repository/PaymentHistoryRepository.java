@@ -120,32 +120,4 @@ public class PaymentHistoryRepository {
     String sql = "DELETE FROM payment_history";
     jdbcTemplate.update(sql);
   }
-
-  public Map<String, Object> createPaymentAndHistory(Long orderId, Integer paymentAmount, String paymentMethod, Timestamp transactionAt) {
-    return jdbcTemplate.execute((Connection connection) -> {
-      try (CallableStatement callableStatement = connection.prepareCall(
-              "{CALL create_payment_and_history(?, ?, ?, ?)}"
-      )) {
-        // Set procedure input parameters
-        callableStatement.setLong(1, orderId);
-        callableStatement.setInt(2, paymentAmount);
-        callableStatement.setString(3, paymentMethod);
-        callableStatement.setTimestamp(4, transactionAt);
-
-        // Execute the procedure
-        boolean hasResultSet = callableStatement.execute();
-
-        Map<String, Object> result = new HashMap<>();
-        if (hasResultSet) {
-          try (var resultSet = callableStatement.getResultSet()) {
-            if (resultSet.next()) {
-              result.put("payment_id", resultSet.getLong("payment_id"));
-              result.put("payment_history_id", resultSet.getLong("payment_history_id"));
-            }
-          }
-        }
-        return result;
-      }
-    });
-  }
 }

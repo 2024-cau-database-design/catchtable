@@ -82,15 +82,15 @@ public class PickupService {
     Long orderId = (Long) orderResult.get("order_id");
 
     // 5. Call createPaymentAndHistory
+    // 5. Call createPaymentAndHistory
     System.out.println("Calling createPaymentAndHistory procedure...");
     Map<String, Object> paymentResult = paymentRepository.createPaymentAndHistory(
             orderId,
-            10000, // Example payment amount
-            "CARD", // Example payment method
+            (Integer) orderResult.get("total_price"), // Use the total price from order result
+            "CARD", // Assume this is added to PickupCreateRequestDTO
             LocalDateTime.now() // Current transaction date
     );
     System.out.println("createPaymentAndHistory Result: " + paymentResult);
-
     // Combine results for the response
     Map<String, Object> result = new HashMap<>();
     result.putAll(bookingAndPickupResult);

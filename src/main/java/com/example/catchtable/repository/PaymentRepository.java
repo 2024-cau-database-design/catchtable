@@ -3,6 +3,7 @@ package com.example.catchtable.repository;
 import com.example.catchtable.domain.Payment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.CallableStatementCreator;
+import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -118,33 +119,33 @@ public class PaymentRepository {
   }
 
   public Map<String, Object> createPaymentAndHistory(Long orderId, Integer paymentAmount, String paymentMethod, LocalDateTime transactionAt) {
-    return jdbcTemplate.execute((CallableStatementCreator) connection -> {
-              CallableStatement callableStatement = connection.prepareCall(
-                      "{CALL create_payment_and_history(?, ?, ?, ?)}"
-              );
-              // Set input parameters
-              callableStatement.setLong(1, orderId);
-              callableStatement.setInt(2, paymentAmount);
-              callableStatement.setString(3, paymentMethod);
-              callableStatement.setTimestamp(4, Timestamp.valueOf(transactionAt));
+    String sql = "{CALL create_payment_and_history(?, ?, ?, ?)}";
 
-              return callableStatement;
-            },
-            callableStatement -> {
-              // Execute the procedure
-              callableStatement.execute();
+    return jdbcTemplate.execute((ConnectionCallback<Map<String, Object>>) connection -> {
+      try (CallableStatement callableStatement = connection.prepareCall(sql)) {
+        callableStatement.setLong(1, orderId);
+        callableStatement.setInt(2, paymentAmount);
+        callableStatement.setString(3, paymentMethod);
+        callableStatement.setTimestamp(4, Timestamp.valueOf(transactionAt));
 
-              // Retrieve output values from the SELECT query
-              try (ResultSet resultSet = callableStatement.getResultSet()) {
-                if (resultSet.next()) {
-                  Map<String, Object> result = new HashMap<>();
-                  result.put("payment_id", resultSet.getLong("payment_id"));
-                  result.put("payment_history_id", resultSet.getLong("payment_history_id"));
-                  return result;
-                } else {
-                  throw new IllegalStateException("No result returned from procedure create_payment_and_history");
-                }
-              }
-            });
+        boolean hasResults = callableStatement.execute();
+
+        Map<String, Object> result = new HashMap<>();
+        if (hasResults) {
+          try (ResultSet rs = callableStatement.getResultSet()) {
+            if (rs.next()) {
+              result.put("payment_id", rs.getLong("payment_id"));
+              result.put("payment_history_id", rs.getLong("payment_history_id"));
+            }
+          }
+        }
+
+        return result;
+      } catch (SQLException e) {
+        //에러 로그 찍기
+        e.printStackTrace();
+        throw new RuntimeException("Error executing create_payment_and_history procedure", e);
+      }
+    });
   }
 }
