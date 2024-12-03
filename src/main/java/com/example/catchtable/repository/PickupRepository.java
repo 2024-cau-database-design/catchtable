@@ -39,14 +39,6 @@ public class PickupRepository {
           rs.getTimestamp("deleted_at")
       );
 
-//  public Optional<Pickup> save(Pickup entity) {
-//    if (entity.getId() == null) {
-//      return insert(entity);
-//    } else {
-//      return update(entity);
-//    }
-//  }
-
   public Long insert(Pickup entity) {
     String sql = "INSERT INTO pickup (id, picked_at, pickup_time_id, pickup_at, restaurant_id) VALUES (?, ?, ?, ?, ?)"; // restaurant_id 추가
     KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -73,14 +65,6 @@ public class PickupRepository {
         entity.getId());
     return findById(entity.getId());
   }
-
-//  public Iterable<Pickup> saveAll(Iterable<Pickup> entities) {
-//    List<Pickup> result = new ArrayList<>();
-//    for (Pickup entity : entities) {
-//      save(entity).ifPresent(result::add); // save 결과를 리스트에 추가
-//    }
-//    return result;
-//  }
 
   public Optional<Pickup> findById(Long id) { // Integer -> Long
     String sql = "SELECT * FROM pickup WHERE id = ?";
@@ -189,6 +173,16 @@ public class PickupRepository {
     });
   }
 
+  public List<Pickup> findPickupsByRestaurantId(Long restaurantId, Optional<LocalDate> pickupDate) {
+    StringBuilder sql = new StringBuilder("SELECT * FROM pickup WHERE restaurant_id = ?");
+    List<Object> params = new ArrayList<>();
+    params.add(restaurantId);
 
+    if (pickupDate.isPresent()) {
+      sql.append(" AND DATE(pickup_at) = ?");
+      params.add(java.sql.Date.valueOf(pickupDate.get()));
+    }
 
+    return jdbcTemplate.query(sql.toString(), pickupRowMapper, params.toArray());
+  }
 }

@@ -9,7 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -28,6 +29,37 @@ public class PickupController {
     @GetMapping("/{id}")
     public Optional<Pickup> getById(@PathVariable Long id){
         return pickupRepository.findById(id);
+    }
+
+    // get all pickups by restaurantId
+    @GetMapping("/restaurant/{id}")
+    public ResponseEntity<List<Pickup>> getAllPickupsByRestaurantId(@PathVariable Long id) {
+        try {
+            List<Pickup> pickups = pickupRepository.findPickupsByRestaurantId(id, Optional.empty());
+            if (pickups.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok(pickups);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
+    @GetMapping("/restaurant/{id}/today")
+    public ResponseEntity<List<Pickup>> getTodayPickupsByRestaurantId(@PathVariable Long id) {
+        try {
+            List<Pickup> pickups = pickupRepository.findPickupsByRestaurantId(id, Optional.of(LocalDate.now()));
+            if (pickups.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok(pickups);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
     }
 
     @PostMapping("")
