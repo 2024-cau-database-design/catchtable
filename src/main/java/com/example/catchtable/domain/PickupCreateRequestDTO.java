@@ -30,13 +30,17 @@ public class PickupCreateRequestDTO {
     @NotNull
     private List<PickupMenu> pickupMenus; // 픽업 메뉴 목록
 
+    @NotNull
+    private String paymentMethod;
+
     // 정적 팩토리 메소드
     public static PickupCreateRequestDTO fromEntity(
             final Long userId,
             final Long restaurantId,
             final Long pickupTimeId,
             final LocalDateTime pickupAt,
-            final List<PickupMenu> pickupMenus
+            final List<PickupMenu> pickupMenus,
+            final String paymentMethod
     ) {
         PickupCreateRequestDTO dto = new PickupCreateRequestDTO();
         dto.userId = userId;
@@ -44,6 +48,7 @@ public class PickupCreateRequestDTO {
         dto.pickupTimeId = pickupTimeId;
         dto.pickupAt = pickupAt;
         dto.pickupMenus = pickupMenus;
+        dto.paymentMethod = paymentMethod;
         return dto;
     }
 

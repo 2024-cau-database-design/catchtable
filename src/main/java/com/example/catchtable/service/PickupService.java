@@ -88,7 +88,7 @@ public class PickupService {
     Map<String, Object> paymentResult = paymentRepository.createPaymentAndHistory(
             orderId,
             (Integer) orderResult.get("total_price"), // Use the total price from order result
-            "CARD", // Assume this is added to PickupCreateRequestDTO
+            pickupRequest.getPaymentMethod(), // Assume this is added to PickupCreateRequestDTO
             LocalDateTime.now() // Current transaction date
     );
     System.out.println("createPaymentAndHistory Result: " + paymentResult);
