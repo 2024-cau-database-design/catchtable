@@ -8,13 +8,9 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.*;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 public class PaymentHistoryRepository {
@@ -28,12 +24,14 @@ public class PaymentHistoryRepository {
 
   private final RowMapper<PaymentHistory> paymentHistoryRowMapper = (rs, rowNum) ->
       PaymentHistory.fromEntity(
-          rs.getLong("id"), // int unsigned -> Long
-          rs.getString("method"), // int -> String
-          rs.getLong("amount"), // int unsigned -> Long
-          rs.getLong("status"), // int unsigned -> Long
-          rs.getDate("transaction_date").toLocalDate(), // Date -> LocalDate
-          rs.getLong("payment_id") // int unsigned -> Long
+          rs.getLong("id"),
+          rs.getString("method"),
+          rs.getInt("amount"),
+          rs.getInt("status_id"),
+          rs.getInt("payment_id"),
+          rs.getTimestamp("transaction_at").toLocalDateTime(),
+          rs.getTimestamp("created_at"),
+          rs.getTimestamp("updated_at")
       );
 
   public Optional<PaymentHistory> save(PaymentHistory entity) {
@@ -45,43 +43,40 @@ public class PaymentHistoryRepository {
   }
 
   private Optional<PaymentHistory> insert(PaymentHistory entity) {
-    String sql = "INSERT INTO payment_history (method, amount, status, transaction_date, payment_id) VALUES (?, ?, ?, ?, ?)";
+    String sql = "INSERT INTO payment_history (method, amount, status_id, transaction_at, payment_id) VALUES (?, ?, ?, ?, ?)";
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-      ps.setString(1, entity.getMethod()); // int -> String
-      ps.setLong(2, entity.getAmount()); // int -> Long
-      ps.setLong(3, entity.getStatus()); // int -> Long
-      ps.setDate(4, Date.valueOf(entity.getTransactionDate())); // LocalDate -> Date
-      ps.setLong(5, entity.getPaymentId()); // int -> Long
+      ps.setString(1, entity.getMethod());
+      ps.setInt(2, entity.getAmount());
+      ps.setInt(3, entity.getStatusId());
+      ps.setTimestamp(4, Timestamp.valueOf(entity.getTransactionAt()));
+      ps.setInt(5, entity.getPaymentId());
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).longValue()); // int -> Long
+    return findById((long) Objects.requireNonNull(key).intValue());
   }
 
   private Optional<PaymentHistory> update(PaymentHistory entity) {
-    String sql = "UPDATE payment_history SET method = ?, amount = ?, status = ?, transaction_date = ?, payment_id = ? WHERE id = ?";
-    jdbcTemplate.update(sql, entity.getMethod(), entity.getAmount(), entity.getStatus(),
-        Date.valueOf(entity.getTransactionDate()), entity.getPaymentId(), entity.getId()); // LocalDate -> Date
+    String sql = "UPDATE payment_history SET method = ?, amount = ?, status_id = ?, transaction_at = ?, payment_id = ? WHERE id = ?";
+    jdbcTemplate.update(sql, entity.getMethod(), entity.getAmount(), entity.getStatusId(),
+        entity.getTransactionAt(), entity.getPaymentId(), entity.getId());
     return findById(entity.getId());
   }
 
   public Iterable<PaymentHistory> saveAll(Iterable<PaymentHistory> entities) {
-    List<PaymentHistory> result = new ArrayList<>();
-    for (PaymentHistory entity : entities) {
-      save(entity).ifPresent(result::add); // save 결과를 리스트에 추가
-    }
-    return result;
+    entities.iterator().forEachRemaining(this::save);
+    return findAll(entities);
   }
 
-  public Optional<PaymentHistory> findById(Long id) { // Integer -> Long
+  public Optional<PaymentHistory> findById(Long id) {
     String sql = "SELECT * FROM payment_history WHERE id = ?";
     List<PaymentHistory> result = jdbcTemplate.query(sql, paymentHistoryRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Long id) { // Integer -> Long
+  public boolean existsById(Long id) {
     String sql = "SELECT count(*) FROM payment_history WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -93,10 +88,13 @@ public class PaymentHistoryRepository {
   }
 
   public Iterable<PaymentHistory> findAll(Iterable<PaymentHistory> entities) {
-    List<Long> ids = new ArrayList<>();
-    entities.forEach(entity -> ids.add(entity.getId()));
-    String sql = "SELECT * FROM payment_history WHERE id IN (?)";
-    return jdbcTemplate.query(sql, paymentHistoryRowMapper, ids);
+    List<PaymentHistory> resultList = new ArrayList<>();
+    for (PaymentHistory entity : entities) {
+      if (existsById(entity.getId())) {
+        resultList.add(entity);
+      }
+    }
+    return resultList;
   }
 
   public long count() {
@@ -105,7 +103,7 @@ public class PaymentHistoryRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Long id) { // Integer -> Long
+  public void deleteById(Long id) {
     String sql = "DELETE FROM payment_history WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }

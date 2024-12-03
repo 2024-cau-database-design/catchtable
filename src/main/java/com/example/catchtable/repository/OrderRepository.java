@@ -3,19 +3,14 @@ package com.example.catchtable.repository;
 import com.example.catchtable.domain.Order;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.sql.*;
+import java.util.*;
 
 @Repository
 public class OrderRepository {
@@ -29,14 +24,14 @@ public class OrderRepository {
 
   private final RowMapper<Order> orderRowMapper = (rs, rowNum) ->
       Order.fromEntity(
-          rs.getLong("id"), // int unsigned -> Long
-          rs.getLong("status_id"), // int unsigned -> Long
-          rs.getTimestamp("created_at"), // Timestamp -> LocalDateTime
-          rs.getLong("total_price"), // int unsigned -> Long
-          rs.getLong("restaurant_id"), // int unsigned -> Long
-          rs.getLong("customer_id"), // int unsigned -> Long
-          rs.getLong("reservation_fee"), // int unsigned -> Long
-          rs.getLong("booking_id") // int unsigned -> Long
+          rs.getLong("id"), // id 필드 추가
+          rs.getInt("restaurant_id"),
+          rs.getInt("customer_id"),
+          rs.getInt("booking_id"),
+          rs.getInt("status_id"),
+          rs.getInt("total_price"),
+          rs.getInt("reservation_fee"),
+          rs.getTimestamp("created_at")
       );
 
   public Optional<Order> save(Order entity) {
@@ -53,16 +48,16 @@ public class OrderRepository {
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-      ps.setLong(1, entity.getRestaurantId()); // int -> Long
-      ps.setLong(2, entity.getCustomerId()); // int -> Long
-      ps.setLong(3, entity.getBookingId()); // int -> Long
-      ps.setLong(4, entity.getStatusId()); // int -> Long
-      ps.setLong(5, entity.getTotalPrice()); // int -> Long
-      ps.setLong(6, entity.getReservationFee()); // int -> Long
+      ps.setInt(1, entity.getRestaurantId());
+      ps.setInt(2, entity.getCustomerId());
+      ps.setInt(3, entity.getBookingId());
+      ps.setInt(4, entity.getStatusId());
+      ps.setInt(5, entity.getTotalPrice());
+      ps.setInt(6, entity.getReservationFee());
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).longValue()); // int -> Long
+    return findById((long) Objects.requireNonNull(key).intValue());
   }
 
   private Optional<Order> update(Order entity) {
@@ -74,20 +69,17 @@ public class OrderRepository {
   }
 
   public Iterable<Order> saveAll(Iterable<Order> entities) {
-    List<Order> result = new ArrayList<>();
-    for (Order entity : entities) {
-      save(entity).ifPresent(result::add); // save 결과를 리스트에 추가
-    }
-    return result;
+    entities.iterator().forEachRemaining(this::save);
+    return findAll(entities);
   }
 
-  public Optional<Order> findById(Long id) { // Integer -> Long
+  public Optional<Order> findById(Long id) {
     String sql = "SELECT * FROM `order` WHERE id = ?";
     List<Order> result = jdbcTemplate.query(sql, orderRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Long id) { // Integer -> Long
+  public boolean existsById(Long id) {
     String sql = "SELECT count(*) FROM `order` WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -99,10 +91,13 @@ public class OrderRepository {
   }
 
   public Iterable<Order> findAll(Iterable<Order> entities) {
-    List<Long> ids = new ArrayList<>();
-    entities.forEach(entity -> ids.add(entity.getId()));
-    String sql = "SELECT * FROM `order` WHERE id IN (?)";
-    return jdbcTemplate.query(sql, orderRowMapper, ids);
+    List<Order> resultList = new ArrayList<>();
+    for (Order entity : entities) {
+      if (existsById(entity.getId())) {
+        resultList.add(entity);
+      }
+    }
+    return resultList;
   }
 
   public long count() {
@@ -111,7 +106,7 @@ public class OrderRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Long id) { // Integer -> Long
+  public void deleteById(Long id) {
     String sql = "DELETE FROM `order` WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }
@@ -127,5 +122,47 @@ public class OrderRepository {
   public void deleteAll() {
     String sql = "DELETE FROM `order`";
     jdbcTemplate.update(sql);
+  }
+
+  public Map<String, Object> createOrderAndItems(
+          Long bookingId,
+          Long restaurantId,
+          Long customerId,
+          Integer reservationFee,
+          String menuJson
+  ) {
+    System.out.println("Calling createOrderAndItems procedure...");
+    System.out.println("bookingId: " + bookingId);
+    System.out.println("restaurantId: " + restaurantId);
+    System.out.println("customerId: " + customerId);
+    System.out.println("reservationFee: " + reservationFee);
+    System.out.println("menuJson: " + menuJson);
+
+    return jdbcTemplate.execute((PreparedStatementCreator) connection -> {
+      CallableStatement callableStatement = connection.prepareCall(
+              "{CALL create_order_and_items(?, ?, ?, ?, ?)}"
+      );
+      // Set input parameters
+      callableStatement.setLong(1, bookingId);
+      callableStatement.setLong(2, restaurantId);
+      callableStatement.setLong(3, customerId);
+      callableStatement.setInt(4, reservationFee);
+      callableStatement.setString(5, menuJson);
+      return callableStatement;
+    }, callableStatement -> {
+      // Execute the procedure
+      callableStatement.execute();
+
+      Map<String, Object> result = new HashMap<>();
+      ResultSet rs = callableStatement.getResultSet();
+      while (rs.next()) {
+        result.put("order_id", rs.getLong("order_id"));
+        result.put("total_price", rs.getInt("total_price"));
+      }
+      rs.close();
+
+      System.out.println("createOrderAndItems Result: " + result);
+      return result;
+    });
   }
 }

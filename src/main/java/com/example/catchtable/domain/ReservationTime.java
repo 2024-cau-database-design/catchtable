@@ -1,20 +1,22 @@
 package com.example.catchtable.domain;
 
-import java.sql.Time;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.sql.Time;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ReservationTime {
 
-  private Long id; // int unsigned -> Long
-  private Long restaurantId; // int unsigned -> Long
+  private Long id;
+  private Integer restaurantId;
   private Time time;
 
   // 정적 팩토리 메소드
-  public static ReservationTime fromEntity(Long id, Time time, Long restaurantId) {
+  public static ReservationTime fromEntity(Long id, Time time, Integer restaurantId) {
     ReservationTime reservationTime = new ReservationTime();
     reservationTime.id = id;
     reservationTime.time = time;

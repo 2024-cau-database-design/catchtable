@@ -12,7 +12,6 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.sql.Timestamp;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -30,13 +29,11 @@ public class ReservationRepository {
 
   private final RowMapper<Reservation> reservationRowMapper = (rs, rowNum) ->
       Reservation.fromEntity(
-          rs.getLong("id"), // int unsigned -> Long
-          rs.getLong("reservation_time_id"), // int unsigned -> Long
+          rs.getLong("id"),
+          rs.getInt("reservation_time_id"),
           rs.getDate("booking_date").toLocalDate(),
-          rs.getInt("guests_count"), // byte -> int
-          rs.getLong("restaurant_table_id"), // int unsigned -> Long
-          rs.getBoolean("is_hidden"), // tinyint(1) -> Boolean, 추가
-          rs.getLong("restaurant_id"), // int unsigned -> Long, 추가
+          rs.getByte("guests_count"),
+          rs.getInt("restaurant_table_id"),
           rs.getTimestamp("created_at"),
           rs.getTimestamp("updated_at"),
           rs.getBoolean("is_deleted"),
@@ -52,52 +49,41 @@ public class ReservationRepository {
   }
 
   private Optional<Reservation> insert(Reservation entity) {
-    String sql = "INSERT INTO reservation (reservation_time_id, booking_date, guests_count, restaurant_table_id, is_hidden, restaurant_id) " + // is_hidden, restaurant_id 추가
-        "VALUES (?, ?, ?, ?, ?, ?)"; // is_hidden, restaurant_id 추가
+    String sql = "INSERT INTO reservation (reservation_time_id, booking_date, guests_count, restaurant_table_id) " +
+        "VALUES (?, ?, ?, ?)";
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-      ps.setLong(1, entity.getReservationTimeId()); // int -> Long
+      ps.setInt(1, entity.getReservationTimeId());
       ps.setDate(2, Date.valueOf(entity.getBookingDate()));
-      ps.setInt(3, entity.getGuestsCount()); // byte -> int
-      ps.setLong(4, entity.getRestaurantTableId()); // int -> Long
-      ps.setBoolean(5, entity.getIsHidden()); // Boolean, 추가
-      ps.setLong(6, entity.getRestaurantId()); // Long, 추가
+      ps.setByte(3, entity.getGuestsCount());
+      ps.setInt(4, entity.getRestaurantTableId());
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).longValue()); // int -> Long
+    return findById((long) Objects.requireNonNull(key).intValue());
   }
 
   private Optional<Reservation> update(Reservation entity) {
     String sql = "UPDATE reservation SET reservation_time_id = ?, booking_date = ?, guests_count = ?, " +
-        "restaurant_table_id = ?, is_hidden = ?, restaurant_id = ? WHERE id = ?"; // is_hidden, restaurant_id 추가
-    jdbcTemplate.update(sql,
-        entity.getReservationTimeId(),
-        Date.valueOf(entity.getBookingDate()),
-        entity.getGuestsCount(),
-        entity.getRestaurantTableId(),
-        entity.getIsHidden(), // Boolean, 추가
-        entity.getRestaurantId(), // Long, 추가
-        entity.getId());
+        "restaurant_table_id = ? WHERE id = ?";
+    jdbcTemplate.update(sql, entity.getReservationTimeId(), Date.valueOf(entity.getBookingDate()),
+        entity.getGuestsCount(), entity.getRestaurantTableId(), entity.getId());
     return findById(entity.getId());
   }
 
   public Iterable<Reservation> saveAll(Iterable<Reservation> entities) {
-    List<Reservation> result = new ArrayList<>();
-    for (Reservation entity : entities) {
-      save(entity).ifPresent(result::add); // save 결과를 리스트에 추가
-    }
-    return result;
+    entities.iterator().forEachRemaining(this::save);
+    return findAll(entities);
   }
 
-  public Optional<Reservation> findById(Long id) { // Integer -> Long
+  public Optional<Reservation> findById(Long id) {
     String sql = "SELECT * FROM reservation WHERE id = ?";
     List<Reservation> result = jdbcTemplate.query(sql, reservationRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Long id) { // Integer -> Long
+  public boolean existsById(Long id) {
     String sql = "SELECT count(*) FROM reservation WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -109,10 +95,13 @@ public class ReservationRepository {
   }
 
   public Iterable<Reservation> findAll(Iterable<Reservation> entities) {
-    List<Long> ids = new ArrayList<>();
-    entities.forEach(entity -> ids.add(entity.getId()));
-    String sql = "SELECT * FROM reservation WHERE id IN (?)";
-    return jdbcTemplate.query(sql, reservationRowMapper, ids);
+    List<Reservation> resultList = new ArrayList<>();
+    for (Reservation entity : entities) {
+      if (existsById(entity.getId())) {
+        resultList.add(entity);
+      }
+    }
+    return resultList;
   }
 
   public long count() {
@@ -121,7 +110,7 @@ public class ReservationRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Long id) { // Integer -> Long
+  public void deleteById(Long id) {
     String sql = "DELETE FROM reservation WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }

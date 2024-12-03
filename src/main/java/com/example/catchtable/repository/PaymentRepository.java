@@ -2,20 +2,17 @@ package com.example.catchtable.repository;
 
 import com.example.catchtable.domain.Payment;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.CallableStatementCreator;
+import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 public class PaymentRepository {
@@ -29,13 +26,11 @@ public class PaymentRepository {
 
   private final RowMapper<Payment> paymentRowMapper = (rs, rowNum) ->
       Payment.fromEntity(
-          rs.getLong("id"), // int unsigned -> Long
-          rs.getLong("amount"), // int unsigned -> Long
-          rs.getLong("order_id"), // int unsigned -> Long
+          rs.getLong("id"),
+          rs.getInt("amount"),
+          rs.getInt("order_id"),
           rs.getTimestamp("created_at"),
           rs.getTimestamp("updated_at"),
-          rs.getBoolean("is_deleted"),
-          rs.getTimestamp("deleted_at"),
           rs.getString("method")
       );
 
@@ -52,13 +47,13 @@ public class PaymentRepository {
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-      ps.setLong(1, entity.getAmount()); // int -> Long
-      ps.setLong(2, entity.getOrderId()); // int -> Long
+      ps.setInt(1, entity.getAmount());
+      ps.setInt(2, entity.getOrderId());
       ps.setString(3, entity.getMethod());
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).longValue()); // int -> Long
+    return findById((long) Objects.requireNonNull(key).intValue());
   }
 
   private Optional<Payment> update(Payment entity) {
@@ -68,20 +63,17 @@ public class PaymentRepository {
   }
 
   public Iterable<Payment> saveAll(Iterable<Payment> entities) {
-    List<Payment> result = new ArrayList<>();
-    for (Payment entity : entities) {
-      save(entity).ifPresent(result::add); // save 결과를 리스트에 추가
-    }
-    return result;
+    entities.iterator().forEachRemaining(this::save);
+    return findAll(entities);
   }
 
-  public Optional<Payment> findById(Long id) { // Integer -> Long
+  public Optional<Payment> findById(Long id) {
     String sql = "SELECT * FROM payment WHERE id = ?";
     List<Payment> result = jdbcTemplate.query(sql, paymentRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Long id) { // Integer -> Long
+  public boolean existsById(Long id) {
     String sql = "SELECT count(*) FROM payment WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -93,10 +85,13 @@ public class PaymentRepository {
   }
 
   public Iterable<Payment> findAll(Iterable<Payment> entities) {
-    List<Long> ids = new ArrayList<>();
-    entities.forEach(entity -> ids.add(entity.getId()));
-    String sql = "SELECT * FROM payment WHERE id IN (?)";
-    return jdbcTemplate.query(sql, paymentRowMapper, ids);
+    List<Payment> resultList = new ArrayList<>();
+    for (Payment entity : entities) {
+      if (existsById(entity.getId())) {
+        resultList.add(entity);
+      }
+    }
+    return resultList;
   }
 
   public long count() {
@@ -105,7 +100,7 @@ public class PaymentRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Long id) { // Integer -> Long
+  public void deleteById(Long id) {
     String sql = "DELETE FROM payment WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }
@@ -121,5 +116,36 @@ public class PaymentRepository {
   public void deleteAll() {
     String sql = "DELETE FROM payment";
     jdbcTemplate.update(sql);
+  }
+
+  public Map<String, Object> createPaymentAndHistory(Long orderId, Integer paymentAmount, String paymentMethod, LocalDateTime transactionAt) {
+    String sql = "{CALL create_payment_and_history(?, ?, ?, ?)}";
+
+    return jdbcTemplate.execute((ConnectionCallback<Map<String, Object>>) connection -> {
+      try (CallableStatement callableStatement = connection.prepareCall(sql)) {
+        callableStatement.setLong(1, orderId);
+        callableStatement.setInt(2, paymentAmount);
+        callableStatement.setString(3, paymentMethod);
+        callableStatement.setTimestamp(4, Timestamp.valueOf(transactionAt));
+
+        boolean hasResults = callableStatement.execute();
+
+        Map<String, Object> result = new HashMap<>();
+        if (hasResults) {
+          try (ResultSet rs = callableStatement.getResultSet()) {
+            if (rs.next()) {
+              result.put("payment_id", rs.getLong("payment_id"));
+              result.put("payment_history_id", rs.getLong("payment_history_id"));
+            }
+          }
+        }
+
+        return result;
+      } catch (SQLException e) {
+        //에러 로그 찍기
+        e.printStackTrace();
+        throw new RuntimeException("Error executing create_payment_and_history procedure", e);
+      }
+    });
   }
 }

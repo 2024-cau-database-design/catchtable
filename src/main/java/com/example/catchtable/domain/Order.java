@@ -1,6 +1,6 @@
 package com.example.catchtable.domain;
 
-import java.sql.Time;
+import jakarta.validation.constraints.NotNull;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
@@ -11,29 +11,28 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Order {
 
-  private Long id; // int unsigned -> Long
-  private Long statusId; // int unsigned -> Long
-  private LocalDateTime createdAt; // int unsigned -> LocalDateTime
-  private Long totalPrice; // int unsigned -> Long
-  private Long restaurantId; // int unsigned -> Long
-  private Long customerId; // int unsigned -> Long
-  private Long reservationFee; // int unsigned -> Long, nullable
-  private Long bookingId; // int unsigned -> Long
+  private Long id;
+  private Integer restaurantId;
+  private Integer customerId;
+  private Integer bookingId;
+  private Integer statusId;
+  private Integer totalPrice;
+  private Integer reservationFee;
+  private LocalDateTime createdAt;
 
   // 정적 팩토리 메소드
-  public static Order fromEntity(
-      final Long id, final Long statusId, final Timestamp createdAt,
-      final Long totalPrice, final Long restaurantId, final Long customerId,
-      final Long reservationFee, final Long bookingId) {
+  public static Order fromEntity(Long id, Integer restaurantId, Integer customerId, Integer bookingId,
+      Integer statusId, Integer totalPrice, final int reservationFee,
+      Timestamp createdAt) {
     Order order = new Order();
     order.id = id;
-    order.statusId = statusId;
-    order.createdAt = createdAt.toLocalDateTime();
-    order.totalPrice = totalPrice;
     order.restaurantId = restaurantId;
     order.customerId = customerId;
-    order.reservationFee = reservationFee;
     order.bookingId = bookingId;
+    order.statusId = statusId;
+    order.totalPrice = totalPrice;
+    order.reservationFee = reservationFee;
+    order.createdAt = createdAt.toLocalDateTime();
     return order;
   }
 

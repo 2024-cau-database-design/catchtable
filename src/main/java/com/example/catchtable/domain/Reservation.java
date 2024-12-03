@@ -15,33 +15,28 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Reservation {
 
-  private Long id; // int unsigned -> Long
-  private Long reservationTimeId; // int unsigned -> Long
+  private Long id;
+  private Integer reservationTimeId;
   private LocalDate bookingDate;
-  private Integer guestsCount; // tinyint(6) unsigned -> Integer
-  private Long restaurantTableId; // int unsigned -> Long
-  private Boolean isHidden; // tinyint(1) -> Boolean
-  private Long restaurantId; // int unsigned -> Long
+  private Byte guestsCount;
+  private Integer restaurantTableId;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
   private Boolean isDeleted;
   private LocalDateTime deletedAt;
 
+
+
   // 정적 팩토리 메소드
-  public static Reservation fromEntity(
-      final Long id, final Long reservationTimeId, final LocalDate bookingDate, // 타입 변경
-      final Integer guestsCount, final Long restaurantTableId, // 타입 변경
-      final Boolean isHidden, final Long restaurantId, // 필드 추가
-      final Timestamp createdAt, final Timestamp updatedAt,
-      final Boolean isDeleted, final Timestamp deletedAt) {
+  public static Reservation fromEntity(Long id, Integer reservationTimeId, LocalDate bookingDate,
+      Byte guestsCount, Integer restaurantTableId,
+      Timestamp createdAt, Timestamp updatedAt, Boolean isDeleted, Timestamp deletedAt) {
     Reservation reservation = new Reservation();
     reservation.id = id;
     reservation.reservationTimeId = reservationTimeId;
     reservation.bookingDate = bookingDate;
     reservation.guestsCount = guestsCount;
     reservation.restaurantTableId = restaurantTableId;
-    reservation.isHidden = isHidden;
-    reservation.restaurantId = restaurantId;
     reservation.createdAt = createdAt.toLocalDateTime();
     reservation.updatedAt = updatedAt.toLocalDateTime();
     reservation.isDeleted = isDeleted;

@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 public class BookingRepository {
@@ -27,29 +28,35 @@ public class BookingRepository {
 
   private final RowMapper<Booking> bookingRowMapper = (rs, rowNum) ->
       Booking.fromEntity(
-          rs.getLong("id"),
+      null,
           rs.getString("type")
       );
 
 
-  public Optional<Booking> save(Booking entity) {
-    if (entity.getId() == null) {
-      return insert(entity);
-    } else {
-      return update(entity);
-    }
-  }
+//  public Long save(Booking entity) {
+//    System.out.println(entity.getType());
+//    if (entity.getId() == null) {
+//      return insert(entity);
+//    } else {
+//      return update(entity);
+//    }
+//  }
 
-  private Optional<Booking> insert(Booking entity) {
+  public Long insert(Booking entity) {
     String sql = "INSERT INTO booking (type) VALUES (?)";
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
-      PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+      PreparedStatement ps = con.prepareStatement(sql, new String[]{"id"});
       ps.setString(1, entity.getType());
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).longValue());
+    if (key == null) {
+      throw new IllegalStateException("Failed to retrieve generated key.");
+    }
+    System.out.println("Generated Key: " + key);
+    System.out.println("Generated Key: " + key.longValue());
+    return key.longValue();
   }
 
   private Optional<Booking> update(Booking entity) {
@@ -58,14 +65,19 @@ public class BookingRepository {
     return findById(entity.getId());
   }
 
-  public Iterable<Booking> saveAll(Iterable<Booking> entities) {
-    entities.iterator().forEachRemaining(this::save);
-    return findAll(entities);
-  }
+//  public Iterable<Booking> saveAll(Iterable<Booking> entities) {
+//    entities.iterator().forEachRemaining(this::save);
+//    return findAll(entities);
+//  }
 
   public Optional<Booking> findById(Long id) {
     String sql = "SELECT * FROM booking WHERE id = ?";
     List<Booking> result = jdbcTemplate.query(sql, bookingRowMapper, id);
+    System.out.println("result22: [" + result.stream()
+            .map(Booking::getId)
+            .map(String::valueOf)
+            .collect(Collectors.joining(", ")));
+
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 

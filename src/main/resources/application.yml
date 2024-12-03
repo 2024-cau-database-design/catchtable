@@ -5,8 +5,14 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/catchtable
     username: root
-    password: veet2963!!
+    password: 12345678
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-  server:
-    port: 8080
+logging:
+  level:
+    root: INFO  # 기본 로그 레벨
+    org.springframework.jdbc.core: TRACE  # Spring JDBC의 SQL 처리 로그
+    org.springframework.jdbc.datasource: DEBUG  # 데이터 소스 관련 로그
+    org.springframework.jdbc.support.SQLErrorCodeSQLExceptionTranslator: DEBUG  # SQL 에러 상세 로그
+    org.springframework.jdbc.core.StatementCreatorUtils: TRACE
+    com.example: DEBUG  # 사용자 정의 패키지 디버깅 로그

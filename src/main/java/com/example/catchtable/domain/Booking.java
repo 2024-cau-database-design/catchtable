@@ -10,7 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Booking {
 
-  private Long id; // int unsigned -> Long
+  private Long id;
   private String type;
 
   // 정적 팩토리 메소드

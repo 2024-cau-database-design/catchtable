@@ -16,18 +16,24 @@ public class PickupHistory {
   private Long id; // int unsigned -> Long
   private Long statusId; // int unsigned -> Long
   private LocalDateTime pickedAt; // datetime -> LocalDateTime
+  private Long pickupTimeId;
+  private LocalDateTime pickupAt;
   private Long pickupId; // int unsigned -> Long
-  private LocalDate pickupDate;
+  private LocalDateTime createdAt;
 
   // 정적 팩토리 메소드
   public static PickupHistory fromEntity(
-      final Long id, final Long statusId, final Timestamp pickedAt, final Long pickupId, final LocalDate pickupDate) {
+      final Long id, final Long statusId, final Timestamp pickedAt,
+      final Long pickupTimeId,final LocalDateTime pickupAt,
+      final Long pickupId, final LocalDateTime createdAt) {
     PickupHistory pickupHistory = new PickupHistory();
     pickupHistory.id = id;
     pickupHistory.statusId = statusId;
     pickupHistory.pickedAt = toLocalDateTimeOrNull(pickedAt);
+    pickupHistory.pickupTimeId = pickupTimeId;
+    pickupHistory.pickupAt = pickupAt;
     pickupHistory.pickupId = pickupId;
-    pickupHistory.pickupDate = pickupDate;
+    pickupHistory.createdAt = createdAt;
     return pickupHistory;
   }
 
