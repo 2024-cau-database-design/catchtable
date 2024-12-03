@@ -1,15 +1,8 @@
 package com.example.catchtable.service;
 
 import com.example.catchtable.domain.PickupCreateRequestDTO;
-import com.example.catchtable.domain.Pickup;
-import com.example.catchtable.domain.Booking;
-import com.example.catchtable.domain.Order;
-import com.example.catchtable.domain.OrderItem;
-import com.example.catchtable.domain.Payment;
-import com.example.catchtable.domain.PaymentHistory;
 import com.example.catchtable.repository.PickupRepository;
 import com.example.catchtable.repository.BookingRepository;
-//import com.example.catchtable.repository.PickupHistoryRepository;
 import com.example.catchtable.repository.OrderRepository;
 import com.example.catchtable.repository.OrderItemRepository;
 import com.example.catchtable.repository.PaymentRepository;
@@ -20,11 +13,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,12 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class PickupService {
 
   private final PickupRepository pickupRepository;
-  private final BookingRepository bookingRepository;
-//  private final PickupHistoryRepository pickupHistoryRepository;
   private final OrderRepository orderRepository;
-  private final OrderItemRepository orderItemRepository;
   private final PaymentRepository paymentRepository;
-  private final PaymentHistoryRepository paymentHistoryRepository;
 
   @Autowired
   public PickupService(
@@ -51,12 +36,9 @@ public class PickupService {
           PaymentHistoryRepository paymentHistoryRepository
   ) {
     this.pickupRepository = pickupRepository;
-    this.bookingRepository = bookingRepository;
 //    this.pickupHistoryRepository = pickupHistoryRepository;
     this.orderRepository = orderRepository;
-    this.orderItemRepository = orderItemRepository;
     this.paymentRepository = paymentRepository;
-    this.paymentHistoryRepository = paymentHistoryRepository;
   }
 
   @Transactional
@@ -97,10 +79,23 @@ public class PickupService {
     );
     System.out.println("createOrderAndItems Result: " + orderResult);
 
+    Long orderId = (Long) orderResult.get("order_id");
+
+    // 5. Call createPaymentAndHistory
+    System.out.println("Calling createPaymentAndHistory procedure...");
+    Map<String, Object> paymentResult = paymentRepository.createPaymentAndHistory(
+            orderId,
+            10000, // Example payment amount
+            "CARD", // Example payment method
+            LocalDateTime.now() // Current transaction date
+    );
+    System.out.println("createPaymentAndHistory Result: " + paymentResult);
+
     // Combine results for the response
     Map<String, Object> result = new HashMap<>();
     result.putAll(bookingAndPickupResult);
     result.putAll(orderResult);
+    result.putAll(paymentResult);
 
     System.out.println("Final Result: " + result);
     return result;

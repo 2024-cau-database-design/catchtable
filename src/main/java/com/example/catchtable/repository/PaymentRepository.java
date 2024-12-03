@@ -2,19 +2,16 @@ package com.example.catchtable.repository;
 
 import com.example.catchtable.domain.Payment;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.CallableStatementCreator;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.sql.*;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Repository
 public class PaymentRepository {
@@ -33,8 +30,6 @@ public class PaymentRepository {
           rs.getInt("order_id"),
           rs.getTimestamp("created_at"),
           rs.getTimestamp("updated_at"),
-          rs.getBoolean("is_deleted"),
-          rs.getTimestamp("deleted_at"),
           rs.getString("method")
       );
 
@@ -120,5 +115,36 @@ public class PaymentRepository {
   public void deleteAll() {
     String sql = "DELETE FROM payment";
     jdbcTemplate.update(sql);
+  }
+
+  public Map<String, Object> createPaymentAndHistory(Long orderId, Integer paymentAmount, String paymentMethod, LocalDateTime transactionAt) {
+    return jdbcTemplate.execute((CallableStatementCreator) connection -> {
+              CallableStatement callableStatement = connection.prepareCall(
+                      "{CALL create_payment_and_history(?, ?, ?, ?)}"
+              );
+              // Set input parameters
+              callableStatement.setLong(1, orderId);
+              callableStatement.setInt(2, paymentAmount);
+              callableStatement.setString(3, paymentMethod);
+              callableStatement.setTimestamp(4, Timestamp.valueOf(transactionAt));
+
+              return callableStatement;
+            },
+            callableStatement -> {
+              // Execute the procedure
+              callableStatement.execute();
+
+              // Retrieve output values from the SELECT query
+              try (ResultSet resultSet = callableStatement.getResultSet()) {
+                if (resultSet.next()) {
+                  Map<String, Object> result = new HashMap<>();
+                  result.put("payment_id", resultSet.getLong("payment_id"));
+                  result.put("payment_history_id", resultSet.getLong("payment_history_id"));
+                  return result;
+                } else {
+                  throw new IllegalStateException("No result returned from procedure create_payment_and_history");
+                }
+              }
+            });
   }
 }
