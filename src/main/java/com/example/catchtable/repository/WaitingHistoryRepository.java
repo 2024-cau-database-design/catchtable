@@ -28,10 +28,10 @@ public class WaitingHistoryRepository {
 
   private final RowMapper<WaitingHistory> waitingHistoryRowMapper = (rs, rowNum) ->
       WaitingHistory.fromEntity(
-          rs.getInt("id"),
-          rs.getInt("waiting_id"),
+          rs.getLong("id"),
+          rs.getLong("waiting_id"),
           rs.getTimestamp("created_at"),
-          rs.getInt("waiting_status_id")
+          rs.getLong("waiting_status_id")
       );
 
   public Optional<WaitingHistory> save(WaitingHistory entity) {
@@ -47,12 +47,12 @@ public class WaitingHistoryRepository {
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-      ps.setInt(1, entity.getWaitingId());
-      ps.setInt(2, entity.getWaitingStatusId());
+      ps.setLong(1, entity.getWaitingId());
+      ps.setLong(2, entity.getWaitingStatusId());
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById(Objects.requireNonNull(key).longValue());
   }
 
   private Optional<WaitingHistory> update(WaitingHistory entity) {
@@ -66,13 +66,13 @@ public class WaitingHistoryRepository {
     return findAll(entities);
   }
 
-  public Optional<WaitingHistory> findById(Integer id) {
+  public Optional<WaitingHistory> findById(Long id) {
     String sql = "SELECT * FROM waiting_history WHERE id = ?";
     List<WaitingHistory> result = jdbcTemplate.query(sql, waitingHistoryRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) {
     String sql = "SELECT count(*) FROM waiting_history WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -99,7 +99,7 @@ public class WaitingHistoryRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) {
     String sql = "DELETE FROM waiting_history WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }

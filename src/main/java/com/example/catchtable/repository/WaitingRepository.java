@@ -13,6 +13,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -28,11 +29,11 @@ public class WaitingRepository {
 
   private final RowMapper<Waiting> waitingRowMapper = (rs, rowNum) ->
       Waiting.fromEntity(
-          rs.getInt("id"),
+          rs.getLong("id"),
           rs.getTimestamp("created_at"),
-          rs.getInt("customer_id"),
+          rs.getLong("customer_id"),
           rs.getInt("guest_count"),
-          rs.getInt("restaurant_id")
+          rs.getLong("restaurant_id")
       );
 
   public Optional<Waiting> save(Waiting entity) {
@@ -48,13 +49,13 @@ public class WaitingRepository {
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-      ps.setInt(1, entity.getCustomerId());
-      ps.setInt(2, entity.getGuestCount());
-      ps.setInt(3, entity.getRestaurantId());
+      ps.setLong(1, entity.getCustomerId());
+      ps.setLong(2, entity.getGuestCount());
+      ps.setLong(3, entity.getRestaurantId());
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById(Objects.requireNonNull(key).longValue());
   }
 
   private Optional<Waiting> update(Waiting entity) {
@@ -68,13 +69,13 @@ public class WaitingRepository {
     return findAll(entities);
   }
 
-  public Optional<Waiting> findById(Integer id) {
+  public Optional<Waiting> findById(Long id) {
     String sql = "SELECT * FROM waiting WHERE id = ?";
     List<Waiting> result = jdbcTemplate.query(sql, waitingRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) {
     String sql = "SELECT count(*) FROM waiting WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -101,7 +102,7 @@ public class WaitingRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) {
     String sql = "DELETE FROM waiting WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }
@@ -118,4 +119,31 @@ public class WaitingRepository {
     String sql = "DELETE FROM waiting";
     jdbcTemplate.update(sql);
   }
+  
+  /**
+   * Function 호출하여 history_status update
+   */
+  public String callUpdateWaitingStatus(Long waitingId, Integer newStatusId) {
+	    // MySQL Function 호출 쿼리
+	    String sql = "SELECT UpdateWaitingStatus(?, ?)";
+	    try {
+	        // Function 호출 및 결과 반환
+	        return jdbcTemplate.queryForObject(sql, String.class, waitingId, newStatusId);
+	    } catch (Exception e) {
+	        throw new RuntimeException("Error occurred while calling UpdateWaitingStatus function.", e);
+	    }
+	}
+  
+  /**
+   * 프로시저 호출 및 임시 테이블 데이터 조회
+   */
+  public List<Map<String, Object>> getDynamicRankTable(int restaurantId) {
+      // 1. 프로시저 호출
+      jdbcTemplate.execute("CALL GenerateDynamicRankTable(" + restaurantId + ")");
+
+      // 2. 임시 테이블 데이터 조회
+      String query = "SELECT * FROM dynamic_rank_table";
+      return jdbcTemplate.queryForList(query);
+  }
+
 }

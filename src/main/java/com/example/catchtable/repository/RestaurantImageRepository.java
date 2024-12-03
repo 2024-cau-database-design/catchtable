@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -28,14 +27,11 @@ public class RestaurantImageRepository {
 
   private final RowMapper<RestaurantImage> restaurantImageRowMapper = (rs, rowNum) ->
       RestaurantImage.fromEntity(
-          rs.getInt("id"),
-          rs.getInt("restaurant_id"),
+          rs.getLong("id"), // int unsigned -> Long
+          rs.getLong("restaurant_id"), // int unsigned -> Long
           rs.getString("name"),
           rs.getString("url"),
-          rs.getString("description"),
-          rs.getTimestamp("created_at"),
-          rs.getBoolean("is_deleted"),
-          rs.getTimestamp("deleted_at")
+          rs.getString("description")
       );
 
   public Optional<RestaurantImage> save(RestaurantImage entity) {
@@ -51,14 +47,14 @@ public class RestaurantImageRepository {
     KeyHolder keyHolder = new GeneratedKeyHolder();
     jdbcTemplate.update(con -> {
       PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-      ps.setInt(1, entity.getRestaurantId());
+      ps.setLong(1, entity.getRestaurantId()); // int -> Long
       ps.setString(2, entity.getName());
       ps.setString(3, entity.getUrl());
       ps.setString(4, entity.getDescription());
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue());
+    return findById(Objects.requireNonNull(key).longValue()); // int -> Long
   }
 
   private Optional<RestaurantImage> update(RestaurantImage entity) {
@@ -69,17 +65,20 @@ public class RestaurantImageRepository {
   }
 
   public Iterable<RestaurantImage> saveAll(Iterable<RestaurantImage> entities) {
-    entities.iterator().forEachRemaining(this::save);
-    return findAll(entities);
+    List<RestaurantImage> result = new ArrayList<>();
+    for (RestaurantImage entity : entities) {
+      save(entity).ifPresent(result::add); // save 결과를 리스트에 추가
+    }
+    return result;
   }
 
-  public Optional<RestaurantImage> findById(Integer id) {
+  public Optional<RestaurantImage> findById(Long id) { // Integer -> Long
     String sql = "SELECT * FROM restaurant_image WHERE id = ?";
     List<RestaurantImage> result = jdbcTemplate.query(sql, restaurantImageRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) { // Integer -> Long
     String sql = "SELECT count(*) FROM restaurant_image WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
     return Optional.ofNullable(result).orElse(0L) > 0;
@@ -91,13 +90,10 @@ public class RestaurantImageRepository {
   }
 
   public Iterable<RestaurantImage> findAll(Iterable<RestaurantImage> entities) {
-    List<RestaurantImage> resultList = new ArrayList<>();
-    for (RestaurantImage entity : entities) {
-      if (existsById(entity.getId())) {
-        resultList.add(entity);
-      }
-    }
-    return resultList;
+    List<Long> ids = new ArrayList<>();
+    entities.forEach(entity -> ids.add(entity.getId()));
+    String sql = "SELECT * FROM restaurant_image WHERE id IN (?)";
+    return jdbcTemplate.query(sql, restaurantImageRowMapper, ids);
   }
 
   public long count() {
@@ -106,7 +102,7 @@ public class RestaurantImageRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) { // Integer -> Long
     String sql = "DELETE FROM restaurant_image WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }

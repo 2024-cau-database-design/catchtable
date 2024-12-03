@@ -2,23 +2,19 @@ package com.example.catchtable.domain;
 
 import static com.example.catchtable.util.LocalDateTimeUtil.toLocalDateTimeOrNull;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import lombok.Setter;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserAuth {
 
-  private Integer id;
+  private Long id; // int unsigned -> Long
   private String passwordHash;
-  private String ident;
+  private String loginId; // ident -> loginId
   private String email;
   private LocalDateTime createdAt;
   private LocalDateTime updatedAt;
@@ -27,14 +23,14 @@ public class UserAuth {
 
   // 정적 팩토리 메소드
   public static UserAuth fromEntity(
-      final Integer id, final String passwordHash,
-      final String ident, final String email,
+      final Long id, final String passwordHash, // int unsigned -> Long
+      final String loginId, final String email, // ident -> loginId
       final Timestamp createdAt, final Timestamp updatedAt,
       final Boolean isDeleted, final Timestamp deletedAt) {
     UserAuth userAuth = new UserAuth();
     userAuth.id = id;
     userAuth.passwordHash = passwordHash;
-    userAuth.ident = ident;
+    userAuth.loginId = loginId; // ident -> loginId
     userAuth.email = email;
     userAuth.createdAt = createdAt.toLocalDateTime();
     userAuth.updatedAt = updatedAt.toLocalDateTime();

@@ -15,9 +15,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RestaurantInfo {
 
-  private Integer restaurantId;
+  private Long restaurantId; // int unsigned -> Long
   private String phoneNumber;
-  private String fullAddress;
   private String websiteUrl;
   private String description;
   private LocalDateTime createdAt;
@@ -27,14 +26,13 @@ public class RestaurantInfo {
 
   // 정적 팩토리 메소드
   public static RestaurantInfo fromEntity(
-      final Integer restaurantId, final String phoneNumber,
-      final String fullAddress, final String websiteUrl,
-      final String description, final Timestamp createdAt,
-      final Timestamp updatedAt, final Boolean isDeleted, final Timestamp deletedAt) {
+      final Long restaurantId, final String phoneNumber, // int unsigned -> Long
+      final String websiteUrl, final String description,
+      final Timestamp createdAt, final Timestamp updatedAt,
+      final Boolean isDeleted, final Timestamp deletedAt) {
     RestaurantInfo restaurantInfo = new RestaurantInfo();
     restaurantInfo.restaurantId = restaurantId;
     restaurantInfo.phoneNumber = phoneNumber;
-    restaurantInfo.fullAddress = fullAddress;
     restaurantInfo.websiteUrl = websiteUrl;
     restaurantInfo.description = description;
     restaurantInfo.createdAt = createdAt.toLocalDateTime();

@@ -1,11 +1,6 @@
 package com.example.catchtable.repository;
 
 import com.example.catchtable.domain.Customer;
-import com.example.catchtable.domain.RestaurantInfo;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -13,8 +8,11 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Timestamp;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Repository
@@ -29,19 +27,16 @@ public class CustomerRepository {
 
   private final RowMapper<Customer> customerRowMapper = (rs, rowNum) ->
       Customer.fromEntity(
-          rs.getInt("id"),
+          rs.getLong("id"), // int unsigned -> Long
           rs.getString("name"),
-          rs.getString("phone_number"),
-          rs.getTimestamp("created_at"),
-          rs.getBoolean("is_deleted"),
-          rs.getTimestamp("deleted_at")
+          rs.getString("phone_number")
       );
 
   public Optional<Customer> save(Customer entity) {
-    if (existsById(entity.getId())) {
-      return update(entity);
-    } else {
+    if (entity.getId() == null) { // id가 null이면 insert, 아니면 update
       return insert(entity);
+    } else {
+      return update(entity);
     }
   }
 
@@ -57,7 +52,7 @@ public class CustomerRepository {
       return ps;
     }, keyHolder);
     Number key = keyHolder.getKey();
-    return findById(Objects.requireNonNull(key).intValue()); // Return the updated entity
+    return findById(Objects.requireNonNull(key).longValue()); // Long 타입으로 변경
   }
 
   private Optional<Customer> update(Customer entity) {
@@ -67,24 +62,27 @@ public class CustomerRepository {
         entity.getName(),
         entity.getPhoneNumber(),
         entity.getId());
-    return findById(entity.getId()); // Return the updated entity
+    return findById(entity.getId());
   }
 
   public Iterable<Customer> saveAll(Iterable<Customer> entities) {
-    entities.iterator().forEachRemaining(this::save);
-    return findAll(entities); // 존재하는 객체들만 반환
+    List<Customer> result = new ArrayList<>();
+    for (Customer entity : entities) {
+      save(entity).ifPresent(result::add); // save 결과를 리스트에 추가
+    }
+    return result;
   }
 
-  public Optional<Customer> findById(Integer id) {
+  public Optional<Customer> findById(Long id) { // Integer -> Long
     String sql = "SELECT * FROM customer WHERE id = ?";
     List<Customer> result = jdbcTemplate.query(sql, customerRowMapper, id);
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
-  public boolean existsById(Integer id) {
+  public boolean existsById(Long id) { // Integer -> Long
     String sql = "SELECT count(*) FROM customer WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
-    return Optional.ofNullable(result).orElse(0L) > 0; // count가 0보다 크면 존재하는 것으로 간주
+    return Optional.ofNullable(result).orElse(0L) > 0;
   }
 
   public Iterable<Customer> findAll() {
@@ -93,13 +91,10 @@ public class CustomerRepository {
   }
 
   public Iterable<Customer> findAll(Iterable<Customer> entities) {
-    List<Customer> resultList = new ArrayList<>();
-    for (Customer entity : entities) {
-      if (existsById(entity.getId())) {
-        resultList.add(entity);
-      }
-    }
-    return resultList;
+    List<Long> ids = new ArrayList<>();
+    entities.forEach(entity -> ids.add(entity.getId()));
+    String sql = "SELECT * FROM customer WHERE id IN (?)";
+    return jdbcTemplate.query(sql, customerRowMapper, ids);
   }
 
   public long count() {
@@ -108,7 +103,7 @@ public class CustomerRepository {
     return Optional.ofNullable(result).orElse(0L);
   }
 
-  public void deleteById(Integer id) {
+  public void deleteById(Long id) { // Integer -> Long
     String sql = "DELETE FROM customer WHERE id = ?";
     jdbcTemplate.update(sql, id);
   }
@@ -116,7 +111,6 @@ public class CustomerRepository {
   public void delete(Customer entity) {
     deleteById(entity.getId());
   }
-
 
   public void deleteAll(Iterable<? extends Customer> entities) {
     entities.iterator().forEachRemaining(this::delete);

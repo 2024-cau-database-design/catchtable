@@ -1,7 +1,5 @@
 package com.example.catchtable.domain;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,11 +8,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TableType {
 
-  private Integer id;
+  private Long id; // int unsigned -> Long
   private String typeName;
 
   // 정적 팩토리 메소드
-  public static TableType fromEntity(Integer id, String typeName) {
+  public static TableType fromEntity(Long id, String typeName) { // int unsigned -> Long
     TableType tableType = new TableType();
     tableType.id = id;
     tableType.typeName = typeName;

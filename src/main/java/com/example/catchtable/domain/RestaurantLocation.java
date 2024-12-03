@@ -1,42 +1,26 @@
 package com.example.catchtable.domain;
 
-import static com.example.catchtable.util.LocalDateTimeUtil.toLocalDateTimeOrNull;
-
-import jakarta.validation.constraints.NotNull;
-import java.sql.Timestamp;
+import java.math.BigDecimal;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RestaurantLocation {
 
-  private Integer restaurantId;
+  private Long restaurantId; // int unsigned -> Long
   private BigDecimal latitude;
   private BigDecimal longitude;
-  private LocalDateTime createdAt;
-  private LocalDateTime updatedAt;
-  private Boolean isDeleted;
-  private LocalDateTime deletedAt;
 
   // 정적 팩토리 메소드
   public static RestaurantLocation fromEntity(
-      final Integer restaurantId,
-      final BigDecimal latitude, final BigDecimal longitude,
-      final Timestamp createdAt, final Timestamp updatedAt,
-      final Boolean isDeleted, final Timestamp deletedAt) {
+      final Long restaurantId, // int unsigned -> Long
+      final BigDecimal latitude, final BigDecimal longitude) {
     RestaurantLocation restaurantLocation = new RestaurantLocation();
     restaurantLocation.restaurantId = restaurantId;
     restaurantLocation.latitude = latitude;
     restaurantLocation.longitude = longitude;
-    restaurantLocation.createdAt = createdAt.toLocalDateTime();
-    restaurantLocation.updatedAt = updatedAt.toLocalDateTime();
-    restaurantLocation.isDeleted = isDeleted;
-    restaurantLocation.deletedAt = toLocalDateTimeOrNull(deletedAt);
     return restaurantLocation;
   }
 
