@@ -5,9 +5,11 @@ import com.example.catchtable.domain.PickupCreateRequestDTO;
 import com.example.catchtable.repository.PickupRepository;
 import com.example.catchtable.service.PickupService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -29,18 +31,15 @@ public class PickupController {
     }
 
     @PostMapping("")
-    public ResponseEntity<String> createPickup(@RequestBody PickupCreateRequestDTO requestDTO) {
+    public ResponseEntity<?> createPickup(@RequestBody PickupCreateRequestDTO requestDTO) {
         try {
-            // DTO를 서비스로 전달하여 처리
-            pickupService.createPickup(requestDTO);
-            return ResponseEntity.ok("Pickup created successfully.");
+            Pickup createdPickup = (Pickup) pickupService.createPickup(requestDTO);
+            return ResponseEntity.ok(createdPickup);
         } catch (IllegalArgumentException e) {
-            // 유효성 검사 실패 또는 비즈니스 로직 오류
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
-            // 기타 예외 처리
             e.printStackTrace();
-            return ResponseEntity.status(500).body("An unexpected error occurred.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
         }
     }
 }

@@ -149,10 +149,10 @@ public class PickupRepository {
     jdbcTemplate.update(sql);
   }
 
-  public Map<String, Object> createBookingAndPickup(LocalDateTime pickupAt, Long restaurantId, Long customerId, Long pickupTimeId) {
+  public Pickup createBookingAndPickup(LocalDateTime pickupAt, Long restaurantId, Long customerId, Long pickupTimeId) {
     String sql = "{CALL create_booking_and_pickup(?, ?, ?, ?)}";
 
-    return jdbcTemplate.execute((ConnectionCallback<Map<String, Object>>) connection -> {
+    return jdbcTemplate.execute((ConnectionCallback<Pickup>) connection -> {
       try (CallableStatement callableStatement = connection.prepareCall(sql)) {
         // Set input parameters
         callableStatement.setTimestamp(1, Timestamp.valueOf(pickupAt));
@@ -164,17 +164,25 @@ public class PickupRepository {
         boolean hasResultSet = callableStatement.execute();
 
         // Process the ResultSet
-        Map<String, Object> result = new HashMap<>();
         if (hasResultSet) {
           try (ResultSet resultSet = callableStatement.getResultSet()) {
             if (resultSet.next()) {
-              result.put("booking_id", resultSet.getLong("booking_id"));
-              result.put("pickup_id", resultSet.getLong("pickup_id"));
+              return Pickup.fromEntity(
+                      resultSet.getLong("id"),
+                      resultSet.getTimestamp("picked_at"),
+                      resultSet.getTimestamp("pickup_at").toLocalDateTime(),
+                      resultSet.getLong("pickup_time_id"),
+                      resultSet.getLong("restaurant_id"),
+                      resultSet.getTimestamp("created_at"),
+                      resultSet.getTimestamp("updated_at"),
+                      resultSet.getBoolean("is_deleted"),
+                      resultSet.getTimestamp("deleted_at")
+              );
             }
           }
         }
 
-        return result;
+        throw new RuntimeException("No pickup record returned from procedure");
       } catch (SQLException e) {
         throw new RuntimeException("Error executing create_booking_and_pickup procedure", e);
       }

@@ -1,5 +1,6 @@
 package com.example.catchtable.service;
 
+import com.example.catchtable.domain.Pickup;
 import com.example.catchtable.domain.PickupCreateRequestDTO;
 import com.example.catchtable.repository.PickupRepository;
 import com.example.catchtable.repository.BookingRepository;
@@ -42,7 +43,7 @@ public class PickupService {
   }
 
   @Transactional
-  public Map<String, Object> createPickup(PickupCreateRequestDTO pickupRequest) {
+  public Pickup createPickup(PickupCreateRequestDTO pickupRequest) {
     System.out.println("Starting createPickup process...");
     System.out.println("Pickup Request: " + pickupRequest);
 
@@ -51,16 +52,16 @@ public class PickupService {
     System.out.println("Validation completed.");
 
     // 2. Execute the first procedure: create_booking_and_pickup
-    System.out.println("Calling createBookingAndPickup procedure...");
-    Map<String, Object> bookingAndPickupResult = pickupRepository.createBookingAndPickup(
+    System.out.println("Calling createBookingAnd Pickup procedure...");
+    Pickup createdPickup = pickupRepository.createBookingAndPickup(
             pickupRequest.getPickupAt(),
             pickupRequest.getRestaurantId(),
             pickupRequest.getUserId(),
-            1L // Example pickupTimeId
+            pickupRequest.getPickupTimeId()
     );
-    System.out.println("createBookingAndPickup Result: " + bookingAndPickupResult);
+    System.out.println("createBookingAndPickup Result: " + createdPickup);
 
-    Long bookingId = (Long) bookingAndPickupResult.get("booking_id");
+    Long pickupId = (Long) createdPickup.getId();
 
     // 3. Convert PickupMenu to JSON format for the second procedure
     String menuJson = pickupRequest.getPickupMenus().stream()
@@ -71,7 +72,7 @@ public class PickupService {
     // 4. Execute the second procedure: create_order_and_items
     System.out.println("Calling createOrderAndItems procedure...");
     Map<String, Object> orderResult = orderRepository.createOrderAndItems(
-            bookingId,
+            pickupId,
             pickupRequest.getRestaurantId(),
             pickupRequest.getUserId(),
             0, // Example reservation fee
@@ -91,14 +92,8 @@ public class PickupService {
             LocalDateTime.now() // Current transaction date
     );
     System.out.println("createPaymentAndHistory Result: " + paymentResult);
-    // Combine results for the response
-    Map<String, Object> result = new HashMap<>();
-    result.putAll(bookingAndPickupResult);
-    result.putAll(orderResult);
-    result.putAll(paymentResult);
 
-    System.out.println("Final Result: " + result);
-    return result;
+    return createdPickup;
   }
 
   private void validatePickupRequest(PickupCreateRequestDTO pickupRequest) {

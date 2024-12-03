@@ -22,6 +22,9 @@ public class PickupCreateRequestDTO {
     private Long restaurantId; // 레스토랑 ID
 
     @NotNull
+    private Long pickupTimeId;
+
+    @NotNull
     private LocalDateTime pickupAt; // 픽업 날짜
 
     @NotNull
@@ -31,12 +34,14 @@ public class PickupCreateRequestDTO {
     public static PickupCreateRequestDTO fromEntity(
             final Long userId,
             final Long restaurantId,
+            final Long pickupTimeId,
             final LocalDateTime pickupAt,
             final List<PickupMenu> pickupMenus
     ) {
         PickupCreateRequestDTO dto = new PickupCreateRequestDTO();
         dto.userId = userId;
         dto.restaurantId = restaurantId;
+        dto.pickupTimeId = pickupTimeId;
         dto.pickupAt = pickupAt;
         dto.pickupMenus = pickupMenus;
         return dto;
