@@ -1,17 +1,18 @@
 package com.example.catchtable.repository;
 
 import com.example.catchtable.domain.Pickup;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.sql.*;
-import java.sql.Date;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -184,5 +185,49 @@ public class PickupRepository {
     }
 
     return jdbcTemplate.query(sql.toString(), pickupRowMapper, params.toArray());
+  }
+
+  public Map<String, Object> getPickupDetail(Long pickupId) {
+    String sql = "{CALL get_pickup_info(?)}";
+
+    return jdbcTemplate.execute((ConnectionCallback<Map<String, Object>>) connection -> {
+      try (CallableStatement callableStatement = connection.prepareCall(sql)) {
+        callableStatement.setLong(1, pickupId);
+
+        boolean hasResultSet = callableStatement.execute();
+
+        if (hasResultSet) {
+          try (ResultSet resultSet = callableStatement.getResultSet()) {
+            if (resultSet.next()) {
+              Map<String, Object> result = new HashMap<>();
+              ResultSetMetaData metaData = resultSet.getMetaData();
+              int columnCount = metaData.getColumnCount();
+
+              for (int i = 1; i <= columnCount; i++) {
+                String columnName = metaData.getColumnLabel(i);
+                Object columnValue = resultSet.getObject(i);
+                result.put(columnName, columnValue);
+              }
+
+              // JSON 문자열을 파싱하여 Map으로 변환
+              if (result.containsKey("order_items")) {
+                String orderItemsJson = (String) result.get("order_items");
+                if (orderItemsJson != null) {
+                  ObjectMapper objectMapper = new ObjectMapper();
+                  List<Map<String, Object>> orderItems = objectMapper.readValue(orderItemsJson, new TypeReference<List<Map<String, Object>>>(){});
+                  result.put("order_items", orderItems);
+                }
+              }
+
+              return result;
+            }
+          }
+        }
+
+        throw new RuntimeException("No pickup info returned from procedure");
+      } catch (SQLException | JsonProcessingException e) {
+        throw new RuntimeException("Error executing get_pickup_info procedure", e);
+      }
+    });
   }
 }

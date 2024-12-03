@@ -10,7 +10,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -27,8 +29,21 @@ public class PickupController {
     }
 
     @GetMapping("/{id}")
-    public Optional<Pickup> getById(@PathVariable Long id){
-        return pickupRepository.findById(id);
+    public ResponseEntity<Map<String, Object>> getPickupDetail(@PathVariable Long id) {
+        try {
+            Map<String, Object> pickupInfo = pickupRepository.getPickupDetail(id);
+            if (pickupInfo.isEmpty()) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(pickupInfo);
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 에러 응답을 위한 Map 생성
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "An error occurred while fetching pickup info");
+            errorResponse.put("message", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+        }
     }
 
     // get all pickups by restaurantId
@@ -46,6 +61,7 @@ public class PickupController {
                     .body(null);
         }
     }
+
 
     @GetMapping("/restaurant/{id}/today")
     public ResponseEntity<List<Pickup>> getTodayPickupsByRestaurantId(@PathVariable Long id) {

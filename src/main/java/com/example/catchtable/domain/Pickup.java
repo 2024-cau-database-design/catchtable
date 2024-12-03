@@ -34,7 +34,6 @@ public class Pickup {
     pickup.id = id;
     pickup.pickedAt = toLocalDateTimeOrNull(pickedAt);
     pickup.pickupAt = pickupAt;
-    pickup.pickupTimeId = pickupTimeId;
     pickup.restaurantId = restaurantId;
     pickup.createdAt = createdAt.toLocalDateTime();
     pickup.updatedAt = updatedAt.toLocalDateTime();
