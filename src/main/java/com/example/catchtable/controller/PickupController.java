@@ -29,9 +29,9 @@ public class PickupController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getPickupDetail(@PathVariable Long id) {
+    public ResponseEntity<Optional<Map<String, Object>>> getPickupDetail(@PathVariable Long id) {
         try {
-            Map<String, Object> pickupInfo = pickupRepository.getPickupDetail(id);
+            Optional<Map<String, Object>> pickupInfo = pickupRepository.getPickupDetail(id);
             if (pickupInfo.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
@@ -42,15 +42,15 @@ public class PickupController {
             Map<String, Object> errorResponse = new HashMap<>();
             errorResponse.put("error", "An error occurred while fetching pickup info");
             errorResponse.put("message", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Optional.of(errorResponse));
         }
     }
 
     // get all pickups by restaurantId
     @GetMapping("/restaurant/{id}")
-    public ResponseEntity<List<Pickup>> getAllPickupsByRestaurantId(@PathVariable Long id) {
+    public ResponseEntity<List<Map<String, Object>>> getAllPickupsByRestaurantId(@PathVariable Long id) {
         try {
-            List<Pickup> pickups = pickupRepository.findPickupsByRestaurantId(id, Optional.empty());
+            List<Map<String, Object>> pickups = pickupRepository.findPickupsByRestaurantId(id, Optional.empty());
             if (pickups.isEmpty()) {
                 return ResponseEntity.noContent().build();
             }
@@ -64,9 +64,9 @@ public class PickupController {
 
 
     @GetMapping("/restaurant/{id}/today")
-    public ResponseEntity<List<Pickup>> getTodayPickupsByRestaurantId(@PathVariable Long id) {
+    public ResponseEntity<List<Map<String, Object>>> getTodayPickupsByRestaurantId(@PathVariable Long id) {
         try {
-            List<Pickup> pickups = pickupRepository.findPickupsByRestaurantId(id, Optional.of(LocalDate.now()));
+            List<Map<String, Object>> pickups = pickupRepository.findPickupsByRestaurantId(id, Optional.of(LocalDate.now()));
             if (pickups.isEmpty()) {
                 return ResponseEntity.noContent().build();
             }
