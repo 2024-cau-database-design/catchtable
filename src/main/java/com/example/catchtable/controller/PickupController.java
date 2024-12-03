@@ -3,6 +3,7 @@ package com.example.catchtable.controller;
 import com.example.catchtable.domain.Pickup;
 import com.example.catchtable.domain.PickupCreateRequestDTO;
 import com.example.catchtable.repository.PickupRepository;
+import com.example.catchtable.repository.UtilRepository;
 import com.example.catchtable.service.PickupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,11 +22,13 @@ public class PickupController {
 
     private final PickupService pickupService;
     private final PickupRepository pickupRepository;
+    private final UtilRepository utilRepository;
 
     @Autowired
-    public PickupController(PickupService pickupService, PickupRepository pickupRepository) {
+    public PickupController(PickupService pickupService, PickupRepository pickupRepository, UtilRepository utilRepository) {
         this.pickupService = pickupService;
         this.pickupRepository = pickupRepository;
+        this.utilRepository = utilRepository;
     }
 
     @GetMapping("/{id}")
@@ -88,6 +91,20 @@ public class PickupController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePickup(@PathVariable Long id) {
+        try {
+            int result = utilRepository.softDeleteById("pickup", id);
+            if (result == 0) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }
