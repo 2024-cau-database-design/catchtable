@@ -119,6 +119,11 @@ public class PickupService {
             .getId();
 
     if (pickupHistory.isPresent()) {
+      String previousType = pickupStatusRepository.findById(pickupHistory.get().getStatusId()).get().getType();
+      if ("AFTER_PICKUP".equals(previousType)) {
+        throw new IllegalArgumentException("Pickup has already been completed.");
+      }
+
       Timestamp pickedAt = "AFTER_PICKUP".equals(status) ? Timestamp.valueOf(LocalDateTime.now()) : null;
       PickupHistory newPickupHistory = PickupHistory.fromEntity(
               pickupHistory.get().getId(),
