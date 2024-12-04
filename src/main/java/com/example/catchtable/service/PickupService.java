@@ -2,12 +2,8 @@ package com.example.catchtable.service;
 
 import com.example.catchtable.domain.Pickup;
 import com.example.catchtable.domain.PickupCreateRequestDTO;
-import com.example.catchtable.repository.PickupRepository;
-import com.example.catchtable.repository.BookingRepository;
-import com.example.catchtable.repository.OrderRepository;
-import com.example.catchtable.repository.OrderItemRepository;
-import com.example.catchtable.repository.PaymentRepository;
-import com.example.catchtable.repository.PaymentHistoryRepository;
+import com.example.catchtable.domain.PickupHistory;
+import com.example.catchtable.repository.*;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -25,19 +21,21 @@ public class PickupService {
   private final PickupRepository pickupRepository;
   private final OrderRepository orderRepository;
   private final PaymentRepository paymentRepository;
+  private final PickupHistoryRepository pickupHistoryRepository;
+  private final PickupStatusRepository pickupStatusRepository;
+
 
   @Autowired
   public PickupService(
           PickupRepository pickupRepository,
-          BookingRepository bookingRepository,
-//          PickupHistoryRepository pickupHistoryRepository,
+          PickupHistoryRepository pickupHistoryRepository,
+          PickupStatusRepository pickupStatusRepository,
           OrderRepository orderRepository,
-          OrderItemRepository orderItemRepository,
-          PaymentRepository paymentRepository,
-          PaymentHistoryRepository paymentHistoryRepository
+          PaymentRepository paymentRepository
   ) {
     this.pickupRepository = pickupRepository;
-//    this.pickupHistoryRepository = pickupHistoryRepository;
+    this.pickupHistoryRepository = pickupHistoryRepository;
+    this.pickupStatusRepository = pickupStatusRepository;
     this.orderRepository = orderRepository;
     this.paymentRepository = paymentRepository;
   }
@@ -112,5 +110,28 @@ public class PickupService {
     if (exists) {
       throw new IllegalArgumentException("Pickup time is already reserved.");
     }
+  }
+
+  public Optional<PickupHistory> updatePickupStatus(Long pickupId, String status) {
+    Optional<PickupHistory> pickupHistory = pickupHistoryRepository.findLatestByPickupId(pickupId);
+    Long pickupStatusId = pickupStatusRepository.findByType(status)
+            .orElseThrow(() -> new IllegalArgumentException("Invalid pickup status: " + status))
+            .getId();
+
+    if (pickupHistory.isPresent()) {
+      Timestamp pickedAt = "AFTER_PICKUP".equals(status) ? Timestamp.valueOf(LocalDateTime.now()) : null;
+      PickupHistory newPickupHistory = PickupHistory.fromEntity(
+              pickupHistory.get().getId(),
+              pickupStatusId,
+              pickedAt,
+              pickupHistory.get().getPickupTimeId(),
+              pickupHistory.get().getPickupAt(),
+              pickupHistory.get().getPickupId(),
+              LocalDateTime.now()
+      );
+      pickupHistoryRepository.insert(newPickupHistory);
+
+    }
+      return pickupHistoryRepository.findLatestByPickupId(pickupId);
   }
 }
