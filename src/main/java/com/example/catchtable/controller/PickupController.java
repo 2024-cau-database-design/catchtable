@@ -119,7 +119,7 @@ public class PickupController {
         }
     }
 
-    @DeleteMapping("/{id}")
+    @PostMapping("/cancel/{id}")
     public ResponseEntity<Void> deletePickup(@PathVariable Long id) {
         try {
             int result = utilRepository.softDeleteById("pickup", id);
