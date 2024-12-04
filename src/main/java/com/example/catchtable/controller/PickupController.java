@@ -2,6 +2,8 @@ package com.example.catchtable.controller;
 
 import com.example.catchtable.domain.Pickup;
 import com.example.catchtable.domain.PickupCreateRequestDTO;
+import com.example.catchtable.domain.PickupHistory;
+import com.example.catchtable.domain.PickupStatusUpdateDTO;
 import com.example.catchtable.repository.PickupRepository;
 import com.example.catchtable.repository.UtilRepository;
 import com.example.catchtable.service.PickupService;
@@ -49,8 +51,31 @@ public class PickupController {
         }
     }
 
-    // get all pickups by restaurantId
-    @GetMapping("/restaurant/{id}")
+    // get all pickups by userId
+    @GetMapping("/by-user/{id}")
+    public ResponseEntity<List<Map<String, Object>>> getAllPickupsByUserId(@PathVariable Long id) {
+        try {
+            List<Map<String, Object>> pickups = pickupRepository.findPickupsByUserId(id);
+            if (pickups.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok(pickups);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
+    // update pickup status
+    @PostMapping("/status/{id}")
+    public ResponseEntity<Optional<PickupHistory>> updatePickupStatus(@PathVariable Long id, @RequestBody PickupStatusUpdateDTO requestBody) {
+        String newStatus = requestBody.getStatus();
+        Optional<PickupHistory> result = pickupService.updatePickupStatus(id, newStatus);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/by-restaurant/{id}")
     public ResponseEntity<List<Map<String, Object>>> getAllPickupsByRestaurantId(@PathVariable Long id) {
         try {
             List<Map<String, Object>> pickups = pickupRepository.findPickupsByRestaurantId(id, Optional.empty());
@@ -66,7 +91,7 @@ public class PickupController {
     }
 
 
-    @GetMapping("/restaurant/{id}/today")
+    @GetMapping("/by-restaurant/{id}/today")
     public ResponseEntity<List<Map<String, Object>>> getTodayPickupsByRestaurantId(@PathVariable Long id) {
         try {
             List<Map<String, Object>> pickups = pickupRepository.findPickupsByRestaurantId(id, Optional.of(LocalDate.now()));

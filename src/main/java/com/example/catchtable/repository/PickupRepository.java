@@ -160,6 +160,30 @@ public class PickupRepository {
     });
   }
 
+  //findPickupsByUserId
+  public List<Map<String, Object>> findPickupsByUserId(Long userId) {
+    String sql = "SELECT p.id, p.restaurant_id, p.customer_id, p.created_at, p.updated_at, p.is_deleted, p.deleted_at " +
+            "FROM pickup p " +
+            "JOIN pickup_history ph ON p.id = ph.pickup_id " +
+            "WHERE p.customer_id = ? " +
+            "AND (ph.pickup_id, ph.created_at) IN (" +
+            "    SELECT pickup_id, MAX(created_at) " +
+            "    FROM pickup_history " +
+            "    GROUP BY pickup_id" +
+            ")";
+
+    List<Long> pickupIds = jdbcTemplate.query(sql,
+            (rs, rowNum) -> rs.getLong("id"),
+            userId
+    );
+
+    if (pickupIds.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    return getPickupDetails(pickupIds);
+  }
+
   public List<Map<String, Object>> findPickupsByRestaurantId(Long restaurantId, Optional<LocalDate> pickupDate) {
     // 1. restaurant_id와 pickup_date로 pickup ID들을 조회
     String sql = "SELECT p.id FROM pickup p " +
@@ -217,10 +241,21 @@ public class PickupRepository {
               }
 
               // JSON 문자열을 파싱하여 Map으로 변환
+              ObjectMapper objectMapper = new ObjectMapper();
+
+              // customer JSON 파싱
+              if (result.containsKey("customer")) {
+                String customerJson = (String) result.get("customer");
+                if (customerJson != null) {
+                  Map<String, Object> customer = objectMapper.readValue(customerJson, new TypeReference<Map<String, Object>>(){});
+                  result.put("customer", customer);
+                }
+              }
+
+              // order_items JSON 파싱
               if (result.containsKey("order_items")) {
                 String orderItemsJson = (String) result.get("order_items");
                 if (orderItemsJson != null) {
-                  ObjectMapper objectMapper = new ObjectMapper();
                   List<Map<String, Object>> orderItems = objectMapper.readValue(orderItemsJson, new TypeReference<List<Map<String, Object>>>(){});
                   result.put("order_items", orderItems);
                 }
@@ -249,4 +284,5 @@ public class PickupRepository {
 
     return Optional.of(results.get(0));
   }
+
 }

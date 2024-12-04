@@ -68,6 +68,12 @@ public class PickupStatusRepository {
     return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
   }
 
+  public Optional<PickupStatus> findByType(String type) {
+    String sql = "SELECT * FROM pickup_status WHERE type = ?";
+    List<PickupStatus> result = jdbcTemplate.query(sql, pickupStatusRowMapper, type);
+    return result.isEmpty() ? Optional.empty() : Optional.of(result.get(0));
+  }
+
   public boolean existsById(Long id) {
     String sql = "SELECT count(*) FROM pickup_status WHERE id = ?";
     var result = jdbcTemplate.queryForObject(sql, Long.class, id);
