@@ -49,8 +49,23 @@ public class PickupController {
         }
     }
 
-    // get all pickups by restaurantId
-    @GetMapping("/restaurant/{id}")
+    // get all pickups by userId
+    @GetMapping("/by-user/{id}")
+    public ResponseEntity<List<Map<String, Object>>> getAllPickupsByUserId(@PathVariable Long id) {
+        try {
+            List<Map<String, Object>> pickups = pickupRepository.findPickupsByUserId(id);
+            if (pickups.isEmpty()) {
+                return ResponseEntity.noContent().build();
+            }
+            return ResponseEntity.ok(pickups);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
+    @GetMapping("/by-restaurant/{id}")
     public ResponseEntity<List<Map<String, Object>>> getAllPickupsByRestaurantId(@PathVariable Long id) {
         try {
             List<Map<String, Object>> pickups = pickupRepository.findPickupsByRestaurantId(id, Optional.empty());
@@ -66,7 +81,7 @@ public class PickupController {
     }
 
 
-    @GetMapping("/restaurant/{id}/today")
+    @GetMapping("/by-restaurant/{id}/today")
     public ResponseEntity<List<Map<String, Object>>> getTodayPickupsByRestaurantId(@PathVariable Long id) {
         try {
             List<Map<String, Object>> pickups = pickupRepository.findPickupsByRestaurantId(id, Optional.of(LocalDate.now()));

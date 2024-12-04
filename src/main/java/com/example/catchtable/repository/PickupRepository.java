@@ -160,6 +160,30 @@ public class PickupRepository {
     });
   }
 
+  //findPickupsByUserId
+  public List<Map<String, Object>> findPickupsByUserId(Long userId) {
+    String sql = "SELECT p.id, p.restaurant_id, p.customer_id, p.created_at, p.updated_at, p.is_deleted, p.deleted_at " +
+            "FROM pickup p " +
+            "JOIN pickup_history ph ON p.id = ph.pickup_id " +
+            "WHERE p.customer_id = ? " +
+            "AND (ph.pickup_id, ph.created_at) IN (" +
+            "    SELECT pickup_id, MAX(created_at) " +
+            "    FROM pickup_history " +
+            "    GROUP BY pickup_id" +
+            ")";
+
+    List<Long> pickupIds = jdbcTemplate.query(sql,
+            (rs, rowNum) -> rs.getLong("id"),
+            userId
+    );
+
+    if (pickupIds.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    return getPickupDetails(pickupIds);
+  }
+
   public List<Map<String, Object>> findPickupsByRestaurantId(Long restaurantId, Optional<LocalDate> pickupDate) {
     // 1. restaurant_id와 pickup_date로 pickup ID들을 조회
     String sql = "SELECT p.id FROM pickup p " +
