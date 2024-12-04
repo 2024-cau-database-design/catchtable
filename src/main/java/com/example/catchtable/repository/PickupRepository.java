@@ -217,10 +217,21 @@ public class PickupRepository {
               }
 
               // JSON 문자열을 파싱하여 Map으로 변환
+              ObjectMapper objectMapper = new ObjectMapper();
+
+              // customer JSON 파싱
+              if (result.containsKey("customer")) {
+                String customerJson = (String) result.get("customer");
+                if (customerJson != null) {
+                  Map<String, Object> customer = objectMapper.readValue(customerJson, new TypeReference<Map<String, Object>>(){});
+                  result.put("customer", customer);
+                }
+              }
+
+              // order_items JSON 파싱
               if (result.containsKey("order_items")) {
                 String orderItemsJson = (String) result.get("order_items");
                 if (orderItemsJson != null) {
-                  ObjectMapper objectMapper = new ObjectMapper();
                   List<Map<String, Object>> orderItems = objectMapper.readValue(orderItemsJson, new TypeReference<List<Map<String, Object>>>(){});
                   result.put("order_items", orderItems);
                 }
