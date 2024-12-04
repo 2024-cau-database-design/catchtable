@@ -76,9 +76,12 @@ public class PickupController {
     }
 
     @GetMapping("/by-restaurant/{id}")
-    public ResponseEntity<List<Map<String, Object>>> getAllPickupsByRestaurantId(@PathVariable Long id) {
+    public ResponseEntity<List<Map<String, Object>>> getPickupsByRestaurantId(
+            @PathVariable Long id,
+            @RequestParam(required = false) LocalDate date) {
         try {
-            List<Map<String, Object>> pickups = pickupRepository.findPickupsByRestaurantId(id, Optional.empty());
+            Optional<LocalDate> optionalPickupDate = Optional.ofNullable(date);
+            List<Map<String, Object>> pickups = pickupRepository.findPickupsByRestaurantId(id, optionalPickupDate);
             if (pickups.isEmpty()) {
                 return ResponseEntity.noContent().build();
             }
@@ -89,23 +92,6 @@ public class PickupController {
                     .body(null);
         }
     }
-
-
-    @GetMapping("/by-restaurant/{id}/today")
-    public ResponseEntity<List<Map<String, Object>>> getTodayPickupsByRestaurantId(@PathVariable Long id) {
-        try {
-            List<Map<String, Object>> pickups = pickupRepository.findPickupsByRestaurantId(id, Optional.of(LocalDate.now()));
-            if (pickups.isEmpty()) {
-                return ResponseEntity.noContent().build();
-            }
-            return ResponseEntity.ok(pickups);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null);
-        }
-    }
-
     @PostMapping("")
     public ResponseEntity<?> createPickup(@RequestBody PickupCreateRequestDTO requestDTO) {
         try {
