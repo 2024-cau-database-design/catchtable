@@ -81,7 +81,6 @@ public class PickupService {
     Long orderId = (Long) orderResult.get("order_id");
 
     // 5. Call createPaymentAndHistory
-    // 5. Call createPaymentAndHistory
     System.out.println("Calling createPaymentAndHistory procedure...");
     Map<String, Object> paymentResult = paymentRepository.createPaymentAndHistory(
             orderId,
