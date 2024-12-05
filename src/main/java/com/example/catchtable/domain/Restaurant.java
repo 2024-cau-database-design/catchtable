@@ -40,4 +40,16 @@ public class Restaurant {
     restaurant.ownerId = ownerId;
     return restaurant;
   }
+
+  public void updateName(final String name) {
+    this.name = name;
+  }
+
+  public void updateOwnerId(final Long ownerId) {
+    this.ownerId = ownerId;
+  }
+
+  public void delete() {
+    this.isDeleted = true;
+  }
 }
