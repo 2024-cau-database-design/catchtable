@@ -1,7 +1,11 @@
 package com.example.catchtable.repository;
 
 import com.example.catchtable.domain.Restaurant;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
+import java.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -38,47 +42,58 @@ public class RestaurantRepository {
           rs.getLong("owner_id") // owner_id 필드 추가, int unsigned -> Long
       );
 
+  private static final ObjectMapper objectMapper = new ObjectMapper();
 
-  // 복합 조건 검색
-  public List<Restaurant> searchByConditions(String keyword, Double latitude, Double longitude, String category, String sort) {
-    StringBuilder sql = new StringBuilder("SELECT * FROM restaurant WHERE is_deleted = false");
-    List<Object> params = new ArrayList<>();
+  public static List<Restaurant> parseRestaurantsFromJson(String jsonResult) {
+    List<Restaurant> restaurants = new ArrayList<>();
 
-    // 키워드 검색 (이름만 포함)
-    if (keyword != null && !keyword.isBlank()) {
-      sql.append(" AND name LIKE ?");
-      params.add("%" + keyword + "%");
+    try {
+      JsonNode jsonArray = objectMapper.readTree(jsonResult);
+      if (jsonArray.isArray()) {
+        for (JsonNode jsonNode : jsonArray) {
+          Long id = jsonNode.get("id").asLong();
+          String name = jsonNode.get("name").asText();
+          // 필요한 경우 다른 필드도 파싱
+          restaurants.add(Restaurant.builder().id(id).name(name).build());
+        }
+      }
+    } catch (JsonProcessingException e) {
+      // JSON 파싱 예외 처리
+      e.printStackTrace();
     }
 
-    // 위치 검색 (좌표 기반)
-    if (latitude != null && longitude != null) {
-      sql.append(" AND ST_Distance_Sphere(point(longitude, latitude), point(?, ?)) <= ?");
-      params.add(longitude);
-      params.add(latitude);
-      params.add(5000); // 5km 반경
+    return restaurants;
+  }
+
+  public List<Restaurant> searchByConditions(String keyword, String category) {
+    List<Restaurant> result = new ArrayList<>();
+
+    // 키워드 검색
+    if (keyword != null && !keyword.isBlank()) {
+      String sql = "SELECT CAST(search_restaurants_by_keyword(?) AS CHAR(1000))"; // JSON to String
+      String jsonResult = jdbcTemplate.queryForObject(sql, String.class, keyword);
+      result = parseRestaurantsFromJson(jsonResult); // JSON 파싱 메서드 필요
     }
 
     // 카테고리 검색
     if (category != null && !category.isBlank()) {
-      sql.append(" AND category = ?");
-      params.add(category);
+      String sql = "SELECT CAST(search_restaurants_by_category(?) AS CHAR(1000))"; // JSON to String
+      String jsonResult = jdbcTemplate.queryForObject(sql, String.class, category);
+      List<Restaurant> categoryResult = parseRestaurantsFromJson(jsonResult); // JSON 파싱 메서드 필요
+      if (result.isEmpty()) {
+        result = categoryResult;
+      } else {
+        result.retainAll(categoryResult); // 키워드 검색 결과와 교집합
+      }
     }
 
-    // 정렬
-    sql.append(" ORDER BY ").append(switch (sort) {
-      case "name" -> "name ASC";
-      case "rating" -> "rating DESC";
-      case "distance" -> "ST_Distance_Sphere(point(longitude, latitude), point(?, ?)) ASC";
-      default -> "created_at DESC";
-    });
+    return result;
+  }
 
-    // 거리 정렬의 경우 좌표 추가
-    if ("distance".equals(sort)) {
-      params.add(longitude);
-      params.add(latitude);
-    }
+  public String getActualWorkSchedule(Long restaurantId, LocalDate targetDate) {
+    String sql = "SELECT get_actual_work_schedule(?, ?)";
 
-    return jdbcTemplate.query(sql.toString(), params.toArray(), restaurantRowMapper);
+    return jdbcTemplate.queryForObject(sql, String.class, restaurantId, targetDate);
   }
 
   public List<Restaurant> findByName(String name) {

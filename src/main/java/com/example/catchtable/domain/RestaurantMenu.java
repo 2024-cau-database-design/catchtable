@@ -3,10 +3,14 @@ package com.example.catchtable.domain;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@Builder
 @Getter
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class RestaurantMenu {
 
@@ -35,6 +39,5 @@ public class RestaurantMenu {
     restaurantMenu.isHidden = isHidden;
     return restaurantMenu;
   }
-
   // ... (필요한 비즈니스 로직 추가)
 }
